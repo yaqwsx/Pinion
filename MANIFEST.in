@@ -1,0 +1,2 @@
+include versioneer.py
+include pinion/_version.py

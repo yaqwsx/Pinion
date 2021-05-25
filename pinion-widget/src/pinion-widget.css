@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.arrow {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+    width: 8px;
+    height: 8px;
+}
+
+.tight-shadow {
+    -webkit-filter: drop-shadow(8px 8px 8px #222);
+    filter: drop-shadow(8px 8px 8px #222);
+}
+
+.right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+.left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+.up {
+    transform: rotate(-135deg);
+    -webkit-transform: rotate(-135deg);
+}
+
+.down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
+h1 {
+    @apply block text-3xl mb-3 w-full;
+}
+
+h2 {
+    @apply block text-2xl mb-3 w-full;
+}
+
+h3 {
+    @apply block text-xl mb-3 w-full;
+}
+
+ul {
+    @apply block list-disc pl-8;
+}
+
+p {
+    @apply block w-full;
+}
+
+nav ul {
+    @apply list-none;
+}
