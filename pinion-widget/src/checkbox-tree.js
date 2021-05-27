@@ -1,4 +1,5 @@
 import React from "react";
+import './pinion-widget.scoped.css';
 
 export function FlatRootCheckbox(props) {
     let {roots, ...otherProps} = props;
@@ -15,8 +16,9 @@ export function CheckboxTree(props) {
     return <div className="w-full">
         <input type="checkbox"
                checked={checked}
-               onChange={e => onCheck(collectChildrenId([props]), e.target.checked)}/>
-        <div className="inline-block w-2 px-2">
+               onChange={e => onCheck(collectChildrenId([props]), !checked)}/>
+        <div className="inline-block w-2 px-2"
+             onClick={ () => onExpand(id, !expanded) }>
             {
                 children.length > 0 ? (expanded ? <i className="arrow down"></i> : <i className="arrow right"></i>) : '\u00A0'
             }

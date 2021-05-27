@@ -3,7 +3,7 @@ import useDimensions from "react-cool-dimensions";
 import GridLoader from "react-spinners/GridLoader";
 import { css } from "@emotion/react";
 import ReactMarkdown from 'react-markdown'
-import './pinion-widget.css';
+import './pinion-widget.scoped.css';
 import {FlatRootCheckbox} from "./checkbox-tree"
 
 const loaderCss = css`
@@ -25,6 +25,15 @@ async function fetchJson(path) {
     return await response.json();
 }
 
+function bboxToPoly(bbox) {
+    return [
+        bbox.tl,
+        [bbox.tl[0], bbox.br[1]],
+        bbox.br,
+        [bbox.br[0], bbox.tl[1]]
+    ]
+}
+
 function PcbMap(props) {
     const { observe, width, height } = useDimensions({
         onResize: ({ observe, unobserve, width, height, entry }) => {
@@ -39,7 +48,7 @@ function PcbMap(props) {
     let mapX = x => (transform([x, 0])[0] - area.tl[0]) / (area.br[0] - area.tl[0]) * width;
     let mapY = y => (transform([0, y])[1] - area.tl[1]) / (area.br[1] - area.tl[1]) * height;
 
-    return <div className={"max-w-full relative top-0 left-0 " + className} {...others}>
+    return <div className={"max-w-max relative top-0 left-0 " + className} {...others}>
         <img src={src}
                 alt="PCB Preview"
                 className="tight-shadow"
@@ -95,6 +104,38 @@ function PcbHtmlAnnotation(props) {
                 style={{"left": props.mapX(props.pos[0]), "top": props.mapY(props.pos[1])}}>
                     {props.content}
             </div>;
+}
+
+function ComponentHighligh(props) {
+    let c = props.component;
+    let shape = bboxToPoly(c.bbox);
+    let polySpec = shape
+        .map(p => props.transform(p))
+        .map(p => `${p[0]},${p[1]}`).join(" ");
+    return <>
+        <polygon
+            points={polySpec}
+            fill="none"
+            strokeWidth="1"
+            stroke="rgba(255, 255, 255, 200)"
+            style={{
+                filter: "url(#sharpBlur)"
+            }}/>
+        <polygon
+            points={polySpec}
+            fill="none"
+            strokeWidth="0.8"
+            stroke={props.color}
+            style={{
+                filter: "url(#sharpBlur)",
+                "transformOrigin": "center"
+            }}/>
+        <polygon
+            points={polySpec}
+            fill="none"
+            strokeWidth="0.3"
+            stroke="rgba(0, 0, 0, 0.3)"/>
+    </>
 }
 
 function PinHighlight(props) {
@@ -184,14 +225,51 @@ function PinDescription(props) {
             description = candidates[0].description;
     }
     return <>
-        <h1 className="text-xl">
-            {pin.name}
+        <h1 className="text-2xl font-semibold">
+            Pin {pin.name}
         </h1>
-        <p>
+        <p className="py-1 mb-2 border-gray-300 border-b-2">
             Member of groups: {pin.groups.join(", ")}
         </p>
         <ReactMarkdown>{description}</ReactMarkdown>
     </>
+}
+
+function ComponentDescription(props) {
+    if (props.component === null)
+        return null;
+    let c = props.component;
+    return <>
+        <h1 className="text-2xl font-semibold">
+            Component {c.ref}
+        </h1>
+        <p className="py-1 mb-2 border-gray-300 border-b-2">
+            Member of groups: {c.groups.join(", ")}
+        </p>
+        <ReactMarkdown>{c.description}</ReactMarkdown>
+    </>
+}
+
+function PinTooltip(props) {
+    return <div className="tight-shadow">
+        <div className="bg-gray-300 absolute rounded"
+             style={{
+                width: "3px",
+                height: "30px",
+                transform: "rotate(-60deg)",
+                top: -8,
+                left: 10
+            }}/>
+        <div className="absolute w-max p-2 bg-black text-white rounded border-gray-300 border-2"
+             style={{
+                 top: 10,
+                 left: 18
+             }}>
+            {props.pin.name}
+        </div>
+    </div>;
+
+
 }
 
 export function PinionWidget(props) {
@@ -199,14 +277,17 @@ export function PinionWidget(props) {
     const [error, setError] = useState(null);
     const [visibleGroups, setVisibleGroups] = useState({});
     const [activePin, setActivePin] = useState(null)
+    const [activeComponent, setActiveComponent] = useState(null);
     const [pinnedPin, setPinnedPin] = useState(null)
+    const [pinnedComponent, setPinnedComponent] = useState(null);
     const [frontActive, setFrontActive] = useState(true);
 
     useEffect(() => {
         fetchJson(props.source + "/spec.json")
             .then(setSpec)
             .catch(e => {
-                setError(e.message);
+                console.log(e);
+                setError(e.message + ": " + e.toString());
             });
     }, [props.source]);
 
@@ -217,24 +298,37 @@ export function PinionWidget(props) {
             <GridLoader size={20} css={loaderCss}/>
         </div>
 
-    let handlePinEnter = pin => {
-        setActivePin(pin);
-    };
     let handlePinLeave = pin => {
         if (activePin === pin)
             setActivePin(null)
     };
+    let handleComponentLeave = c => {
+        if (activeComponent === c)
+            setActiveComponent(null)
+    }
+
     let handlePinClick = pin => {
         setPinnedPin(pin);
+        setPinnedComponent(null);
     }
+    let handleComponentClick = c => {
+        setPinnedPin(null);
+        setPinnedComponent(c);
+    };
     let handleMisClick = () => {
         setPinnedPin(null);
+        setPinnedComponent(null);
     }
 
     let handleGroupVisibility = (groups, state) => {
+        // We cannot use Object.fromEntries as Qutebrowser does not support it
+        let change = {};
+        groups.forEach(element => {
+            change[element] = state;
+        });
         setVisibleGroups({
             ...visibleGroups,
-            ...Object.fromEntries(groups.map(x => [x, state]))});
+            ...change});
     }
 
     let side = frontActive ? spec.front : spec.back;
@@ -245,17 +339,27 @@ export function PinionWidget(props) {
     let isPinVisible = pin => (frontActive && pin.front) || (!frontActive && pin.back);
 
     let allPins = spec.components.flatMap(x => x.pins).filter(x => isPinVisible(x));
-    let highlightedPins = allPins.filter(pin => pin.groups.some(group => visibleGroups[group]));
+    let allComponents = spec.components.filter(x => x.highlight);
+
+    let highlightedPins = allPins
+        .filter(pin => pin.groups.some(group => visibleGroups[group]));
+    let highlightedComponents = allComponents
+        .filter(c => c.groups.some(group => visibleGroups[group]))
 
     let selectedPin = activePin === null ? pinnedPin : activePin;
-    let activePins = allPins.filter(pin => selectedPin && pin.name === selectedPin.name );
+    let activePins = allPins
+        .filter(pin => selectedPin && pin.name === selectedPin.name );
+
+    let selectedComponent = activeComponent === null ? pinnedComponent : activeComponent;
+    let activeComponents = allComponents
+        .filter(c => selectedComponent && c.ref === selectedComponent.ref );
 
 
-    return <div className="w-full p-4">
+    return <div className="w-full p-4 font-sans">
         <h1 className="text-2xl font-semibold">
             {spec.name}
         </h1>
-        <p>{spec.description}</p>
+        <ReactMarkdown>{spec.description}</ReactMarkdown>
         <div className="w-full flex flex-wrap my-4">
             <div className="w-full my-4 md:w-auto px-4 flex-none">
                 <GroupSelector
@@ -273,18 +377,25 @@ export function PinionWidget(props) {
                             !activePin ? [] :
                                 [{
                                     "pos": activePin.pos,
-                                    "content": <div className="w-max p-2 bg-black text-white rounded">
-                                                {activePin.name}
-                                            </div>
+                                    "content": <PinTooltip pin={activePin}/>
                                 }]
                         }
                         hotspots={
-                            allPins.map(pin => { return {
-                                "shape": pin.shape,
-                                "onMouseEnter": () => handlePinEnter(pin),
-                                "onMouseLeave": () => handlePinLeave(pin),
-                                "onClick": e => {e.stopPropagation(); handlePinClick(pin)}
-                            }})
+                            [].concat(
+                                allComponents.map(c => { return {
+                                    "shape": bboxToPoly(c.bbox),
+                                    "onMouseEnter": () => setActiveComponent(c),
+                                    "onMouseLeave": () => handleComponentLeave(c),
+                                    "onClick": e => {e.stopPropagation(); handleComponentClick(c)}
+                                }}),
+                                allPins.map(pin => { return {
+                                    "shape": pin.shape,
+                                    "onMouseEnter": () => setActivePin(pin),
+                                    "onMouseLeave": () => handlePinLeave(pin),
+                                    "onClick": e => {e.stopPropagation(); handlePinClick(pin)}
+                                }})
+                            )
+
                         }
                         svgAnnotations={
                             [].concat(
@@ -296,17 +407,29 @@ export function PinionWidget(props) {
                                     </defs>
                                 ],
                                 highlightedPins.map((pin, i) =>
-                                    <PinHighlight key={`h${i}`}
+                                    <PinHighlight key={`ph${i}`}
                                                   pin={pin}
                                                   transform={sideTransform}
                                                   color="#FCD34D"/>
                                 ),
                                 activePins.map((pin, i) =>
-                                    <PinHighlight key={`a${i}`}
+                                    <PinHighlight key={`pa${i}`}
                                                   pin={pin}
                                                   transform={sideTransform}
                                                   color="#DC2626"/>
-                                )
+                                ),
+                                highlightedComponents.map((c, i) =>
+                                    <ComponentHighligh key={`ch${i}`}
+                                                       component={c}
+                                                       transform={sideTransform}
+                                                       color="#3B82F6"/>
+                                ),
+                                activeComponents.map((c, i) =>
+                                    <ComponentHighligh key={`ca${i}`}
+                                                       component={c}
+                                                       transform={sideTransform}
+                                                       color="#7C3AED"/>
+                                ),
                             )
                         }
                     />
@@ -323,6 +446,7 @@ export function PinionWidget(props) {
                     </button>
                 </div>
                 <PinDescription pin={selectedPin} allPins={allPins}/>
+                <ComponentDescription component={selectedComponent}/>
             </div>
         </div>
         <div className="w-full my-4 text-xs text-gray-600 text-sm text-right">

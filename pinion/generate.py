@@ -1,5 +1,4 @@
 from pathlib import Path
-from pinion.template import collectPins
 import pcbnew
 import json
 import tempfile
@@ -11,6 +10,8 @@ from wand.color import Color
 from wand.image import Image
 
 from lxml import etree
+
+from pinion import __version__
 
 def dmil2ki(val):
     """
@@ -28,7 +29,6 @@ def padOutline(pad, offsetBy=0):
     """
     Given a pad return list of points forming a polygon for the pad shape
     """
-    pos = pad.GetPosition()
     p = pcbnew.SHAPE_POLY_SET()
     pad.TransformShapeWithClearanceToPolygon(p, offsetBy, 16, 1.0)
     outline = p.Outline(0)
@@ -57,13 +57,15 @@ def pinDefinition(spec, pad, footprint):
         "name": spec["name"],
         "description": spec.get("description", ""),
         "alias": spec.get("alias", False),
-        "groups": spec.get("groups", [])
+        "groups": getGroup(spec)
     }
 
 def pinsDefinition(spec, footprint):
     """
     Given a pins definition and a footprint, construct description
     """
+    if spec is None:
+        return []
     return [
         pinDefinition(spec[pad.GetName()], pad, footprint)
         for pad in footprint.Pads()
@@ -81,8 +83,9 @@ def componentsDefinition(spec, board):
             "ref": ref,
             "description": s["description"],
             "highlight": s.get("highlight", False),
-            "groups": s.get("groups", []),
-            "pins": pinsDefinition(s["pins"], footprint)
+            "bbox": serializeEdaRect(footprint.GetFootprintRect()),
+            "groups": getGroup(s),
+            "pins": pinsDefinition(s.get("pins", None), footprint)
         })
     return defs
 
@@ -141,9 +144,11 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
 def collectGroups(components):
     groups = set()
     for c in components.values():
-        groups.update(*(c.get("groups", [])))
-        for p in c["pins"].values():
-            groups.update(p.get("groups", []))
+        groups.update(getGroup(c))
+        pins = c.get("pins", None)
+        if pins is not None:
+            for p in pins.values():
+                groups.update(getGroup(p))
     groups = list(groups)
     groups.sort()
     return { g: [] for g in groups }
@@ -176,6 +181,12 @@ def groupStructure(structure, components):
         return collectGroups(components)
     return validateGroupStructure(structure)
 
+def getGroup(spec):
+    g = spec.get("groups", [])
+    if g is None:
+        return []
+    return g
+
 def generate(board, specification, outputdir, dpi, pcbdrawArgs):
     """
     Generate board pinout diagram
@@ -189,6 +200,7 @@ def generate(board, specification, outputdir, dpi, pcbdrawArgs):
         dpi, pcbdrawArgs, True)
 
     specification = {
+        "pinionVersion": __version__,
         "name": specification["name"],
         "description": specification["description"],
         "front": {

@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+input[type=checkbox] {width:18px; height:18px;}
+
 .arrow {
     border: solid black;
     border-width: 0 3px 3px 0;
@@ -53,9 +55,13 @@ ul {
 }
 
 p {
-    @apply block w-full;
+    @apply block w-full my-1;
 }
 
 nav ul {
     @apply list-none;
+}
+
+a {
+    @apply text-blue-500 hover:text-blue-800 border-b-2 border-blue-500;
 }
