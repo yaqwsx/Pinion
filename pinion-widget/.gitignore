@@ -25,3 +25,4 @@ yarn-error.log*
 
 public/test/*
 blank_page.html
+build

@@ -1,6 +1,7 @@
 import click
 import csv
 import io
+from pinion import __version__
 
 def splitStr(delimiter, escapeChar, s):
     """
@@ -58,13 +59,15 @@ def template(board, output, components):
     help="Source KiCAD board (*.kicad_pcb)")
 @click.option("-s", "--specification", type=click.File("r"),
     help="YAML specification of the pinout")
+@click.option("--pack/--no-pack", default=True,
+    help="Pack pinion-widget with the source")
 @click.option("--dpi", type=int, default=300,
     help="DPI of the generated board image")
 @click.option("--style", help="PcbDraw style specification")
 @click.option("--libs", help="PcbDraw library specification")
 @click.option("--remap", help="PcbDraw footprint remapping specification")
 @click.option("--filter", help="PcbDraw filter specification")
-def generate(board, specification, outputdir, dpi, style, libs, remap, filter):
+def generate(board, specification, outputdir, dpi, pack, style, libs, remap, filter):
     """
     Generate a pinout diagram
     """
@@ -79,6 +82,7 @@ def generate(board, specification, outputdir, dpi, style, libs, remap, filter):
     generate(specification=yaml.load(specification),
              board=pcbnew.LoadBoard(board),
              outputdir=outputdir,
+             pack=pack,
              dpi=dpi,
              pcbdrawArgs={
                  "style": style,
@@ -87,7 +91,21 @@ def generate(board, specification, outputdir, dpi, style, libs, remap, filter):
                  "filter": filter
              })
 
+@click.command("get")
+@click.argument("what", type=str)
+@click.argument("output", type=click.File("w"))
+def get(what, output):
+    """
+    Get Pinion resource files - e.g., template, pinion-widget javascript or
+    pinion-widget styles.
+
+    Available options: js css template
+    """
+    import pinion.get
+    return pinion.get.get(what, output)
+
 @click.group()
+@click.version_option(__version__)
 def cli():
     """
     Generate beautiful pinout digrams of your PCBs for web.
@@ -96,6 +114,7 @@ def cli():
 
 cli.add_command(template)
 cli.add_command(generate)
+cli.add_command(get)
 
 if __name__ == "__main__":
     cli()

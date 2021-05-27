@@ -187,7 +187,16 @@ def getGroup(spec):
         return []
     return g
 
-def generate(board, specification, outputdir, dpi, pcbdrawArgs):
+def packPinion(outputdir):
+    from pinion.get import get
+    with open(outputdir / "pinion.js", "w") as f:
+        get("js", f)
+    with open(outputdir / "pinion.css", "w") as f:
+        get("css", f)
+    with open(outputdir / "template.html", "w") as f:
+        get("template", f)
+
+def generate(board, specification, outputdir, dpi, pack, pcbdrawArgs):
     """
     Generate board pinout diagram
     """
@@ -217,3 +226,6 @@ def generate(board, specification, outputdir, dpi, pcbdrawArgs):
 
     with open(outputdir / "spec.json", "w") as f:
         f.write(json.dumps(specification, indent=4))
+
+    if pack:
+        packPinion(outputdir)

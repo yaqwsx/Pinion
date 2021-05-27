@@ -2,18 +2,25 @@ import React from "react";
 import './pinion-widget.scoped.css';
 
 export function FlatRootCheckbox(props) {
-    let {roots, ...otherProps} = props;
-    return roots.map((d, i) =>
-            <CheckboxTree key={i} {...d} {...otherProps}/>)
+    let {roots, sideBySide, ...otherProps} = props;
+    return <div className={sideBySide ? "flex flex-wrap" : ""}>
+    {
+        roots.map((d, i) =>
+            <CheckboxTree key={i}
+                              {...d}
+                              {...otherProps}
+                              className={sideBySide ? "flex-auto" : "w-full" } />)
+    }
+    </div>;
 }
 
 export function CheckboxTree(props) {
-    let { id, label, checked, expanded, onCheck, onExpand, children } = props;
+    let { id, label, checked, expanded, onCheck, onExpand, children, className } = props;
 
     let collectChildrenId = ch =>
         ch.flatMap(c => [c.id].concat(collectChildrenId(c.children)));
 
-    return <div className="w-full">
+    return <div className={className}>
         <input type="checkbox"
                checked={checked}
                onChange={e => onCheck(collectChildrenId([props]), !checked)}/>

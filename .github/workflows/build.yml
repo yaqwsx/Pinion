@@ -1,0 +1,54 @@
+name: Build
+on:
+  push:
+jobs:
+  build:
+    name: "Build pinion documentation"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install dependencies and Pinion
+        run: |
+          set -e
+          sudo apt -qq update
+          sudo apt -qq install --yes --no-install-recommends \
+            zip inkscape make git libmagickwand-dev \
+            libgraphicsmagick1-dev libmagickcore-dev \
+            kicad npm
+          sudo npm install -g npm@latest
+
+          sudo python -m pip install mkdocs svgpathtools
+          sudo python -m pip install -e .
+          cd pinion-widget
+          npm install
+          sudo npm install -g craco
+
+          cd ..
+          sudo chown -R $USER .
+      -  name: Build pinion package
+         run: |
+          set -e
+          make package
+      - name: Upload pinion package artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pinion-package
+          path: dist
+          retention-days: 14
+      - name: Upload pinion-widget package artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pinion-widget-package
+          path: build/widget
+          retention-days: 14
+      - run: |
+          make web
+      - name: Deploy to GH Pages
+        if: github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@4.1.0
+        with:
+          branch: gh-pages
+          folder: site
+          single-commit: true

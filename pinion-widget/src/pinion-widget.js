@@ -210,7 +210,8 @@ function GroupSelector(props) {
         <FlatRootCheckbox
             roots={genTree(props.groups)}
             onCheck={props.onVisible}
-            onExpand={handleExpand}/>
+            onExpand={handleExpand}
+            sideBySide={props.sideBySide}/>
     </div>
 }
 
@@ -281,6 +282,12 @@ export function PinionWidget(props) {
     const [pinnedPin, setPinnedPin] = useState(null)
     const [pinnedComponent, setPinnedComponent] = useState(null);
     const [frontActive, setFrontActive] = useState(true);
+    const { observe, width } = useDimensions({
+        onResize: ({ observe, unobserve, width, height, entry }) => {
+            unobserve();
+            observe();
+        },
+    });
 
     useEffect(() => {
         fetchJson(props.source + "/spec.json")
@@ -354,20 +361,37 @@ export function PinionWidget(props) {
     let activeComponents = allComponents
         .filter(c => selectedComponent && c.ref === selectedComponent.ref );
 
+    // As we are are inside an unknown container, we cannot use media query.
+    // Therefore, we implement layout change in JS instead
+    let treeClass = "w-auto", treeStyle = {}, treeSideBySide = false;
+    let pcbClass = "", pcbStyle = {};
+    let labelClass = "", labelStyle = {minWidth: "300px", maxWidth: "450px"};
+    if (width < 1100) {
+        treeClass = "w-full";
+        treeSideBySide = true;
+        pcbClass = "w-full mx-auto";
+        pcbStyle = { maxWidth: "800px" };
+        // We add the border so the user is aware that there is a container
+        labelClass = "w-full border-gray-600 border-l-2";
+        labelStyle = {minHeight: "300px"};
+    }
 
-    return <div className="w-full p-4 font-sans">
+
+    return <div ref={observe} className="w-full p-4 font-sans">
         <h1 className="text-2xl font-semibold">
             {spec.name}
         </h1>
         <ReactMarkdown>{spec.description}</ReactMarkdown>
         <div className="w-full flex flex-wrap my-4">
-            <div className="w-full my-4 md:w-auto px-4 flex-none">
+            <div className={"my-4 px-4 flex-none " + treeClass} style={treeStyle}>
                 <GroupSelector
                     groups={spec.groups}
                     visible={visibleGroups}
-                    onVisible={handleGroupVisibility}/>
+                    onVisible={handleGroupVisibility}
+                    sideBySide={treeSideBySide}/>
             </div>
-            <div className="w-full my-4 lg:w-auto flex-1 px-4 min-w-1/2"
+            <div className={"my-4 flex-1 px-4 " + pcbClass}
+                 style={pcbStyle}
                  onClick={handleMisClick}>
                 <PcbMap className="mx-auto"
                         src={props.source + "/" + side.file}
@@ -434,7 +458,7 @@ export function PinionWidget(props) {
                         }
                     />
             </div>
-            <div className="w-full my-4 lg:w-96 flex-none">
+            <div className={"my-4 px-2 flex-auto " + labelClass} style={labelStyle}>
                 <div className="w-full flex mb-4">
                     <button className={"flex-1 mr-1 rounded p-3 shadow " + (frontActive ? "bg-blue-400" : "bg-blue-200")}
                             onClick={() => setFrontActive(true)}>

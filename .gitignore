@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+site/
+
+doc/releases
+doc/resources/alksDemo

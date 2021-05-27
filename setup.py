@@ -24,16 +24,13 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "click",
+        "click>=7.1",
         "ruamel.yaml",
         "pcbdraw>=0.7"
     ],
     setup_requires=[
         "versioneer"
     ],
-    extras_require={
-        "dev": ["pytest"],
-    },
     zip_safe=False,
     include_package_data=True,
     entry_points = {

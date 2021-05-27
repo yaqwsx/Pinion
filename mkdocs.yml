@@ -1,0 +1,8 @@
+site_name: Pinion — Nice-looking interactive diagrams for KiCAD PCBs
+theme: readthedocs
+nav:
+    - Home: index.md
+    - Installation: installation.md
+    - Making a diagram: diagramWalkthrough.md
+    - FAQ: faq.md
+
