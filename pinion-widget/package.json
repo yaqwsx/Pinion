@@ -1,6 +1,6 @@
 {
   "name": "pinion-widget",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "craco-plugin-scoped-css": "^1.1.1",
