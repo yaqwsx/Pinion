@@ -20,3 +20,14 @@ pinion --help
 
 If everything is working, proceed to [making your first
 diagram](diagramWalkthrough.md).
+
+
+## Running with KiCAD nightly (v5.99)
+
+If you would like to use Pinion with KiCAD nightly, you can! Just point
+environmental variable PYTHON_PATH to the correct path to the nighly module.
+E.g., on Ubuntu:
+
+```
+PYTHONPATH=/usr/lib/kicad-nightly/lib/python3/dist-packages pinion --help
+```

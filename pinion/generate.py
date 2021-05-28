@@ -1,15 +1,17 @@
 from pathlib import Path
-import pcbnew
+from pcbnewTransition import pcbnew, isV6
 import json
 import tempfile
 import os
 import subprocess
+from pcbnewTransition.transition import isV6
 
 from wand.api import library
 from wand.color import Color
 from wand.image import Image
 
 from lxml import etree
+from pcbdraw.pcbdraw import svg2ki
 
 from pinion import __version__
 
@@ -25,12 +27,15 @@ def ki2mm(val):
 def mm2ki(val):
     return val * 1000000
 
-def padOutline(pad, offsetBy=0):
+def padOutline(pad):
     """
     Given a pad return list of points forming a polygon for the pad shape
     """
     p = pcbnew.SHAPE_POLY_SET()
-    pad.TransformShapeWithClearanceToPolygon(p, offsetBy, 16, 1.0)
+    if isV6():
+        p = pad.GetEffectivePolygon()
+    else:
+        pad.TransformShapeWithClearanceToPolygon(p, 0, 16, 1.0)
     outline = p.Outline(0)
     points = [outline.CPoint(i) for i in range(outline.PointCount())]
     return [(ki2mm(p.x), ki2mm(p.y)) for p in points]
@@ -49,7 +54,7 @@ def pinDefinition(spec, pad, footprint):
     layers = list(pad.GetLayerSet().CuStack())
     pos = pad.GetPosition()
     return {
-        "shape": padOutline(pad, mm2ki(spec.get("offset", 0))),
+        "shape": padOutline(pad),
         "bbox": serializeEdaRect(pad.GetBoundingBox()),
         "pos": [ki2mm(pos.x), ki2mm(pos.y)],
         "front": pcbnew.F_Cu in layers,
@@ -78,12 +83,12 @@ def componentsDefinition(spec, board):
     """
     defs = []
     for ref, s in spec.items():
-        footprint = board.FindModule(ref)
+        footprint = board.FindFootprintByReference(ref)
         defs.append({
             "ref": ref,
             "description": s["description"],
             "highlight": s.get("highlight", False),
-            "bbox": serializeEdaRect(footprint.GetFootprintRect()),
+            "bbox": serializeEdaRect(footprint.GetBoundingBox(False, False)),
             "groups": getGroup(s),
             "pins": pinsDefinition(s.get("pins", None), footprint)
         })
@@ -137,8 +142,8 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
         document = etree.parse(str(svgfilename))
         tlx, tly, w, h = map(float, document.getroot().attrib["viewBox"].split())
         return {
-            "tl": (ki2mm(dmil2ki(tlx)), ki2mm(dmil2ki(tly))),
-            "br": (ki2mm(dmil2ki(tlx + w)), ki2mm(dmil2ki(tly + h)))
+            "tl": (ki2mm(svg2ki(tlx)), ki2mm(svg2ki(tly))),
+            "br": (ki2mm(svg2ki(tlx + w)), ki2mm(svg2ki(tly + h)))
         }
 
 def collectGroups(components):

@@ -23,7 +23,7 @@ def collectComponents(board, components=None):
     components if specified
     """
     d = CommentedMap()
-    footprints = [f for f in board.GetModules()
+    footprints = [f for f in board.GetFootprints()
         if components is None or f.GetReference() in components]
     for i, f in enumerate(footprints):
         description = CommentedMap()

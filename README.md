@@ -23,8 +23,8 @@ Sponsors**](https://github.com/sponsors/yaqwsx) or buy me a coffee:
 
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E2181LU)
 
-You support will allow me to allocate time to properly maintain my projects like
-this.
+Your support will allow me to allocate time to properly maintain my projects
+like this.
 
 PS: Be sure to check out my other KiCAD & PCB related projects:
 

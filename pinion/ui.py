@@ -47,7 +47,7 @@ def template(board, output, components):
     # Note that we import inside functions as pcbnew import takes ~1 to load
     # which makes the UI laggy
     from pinion.template import generateTemplate
-    import pcbnew
+    from pcbnewTransition import pcbnew
 
     pcb = pcbnew.LoadBoard(board)
     generateTemplate(pcb, output, components)
@@ -75,7 +75,7 @@ def generate(board, specification, outputdir, dpi, pack, style, libs, remap, fil
     # which makes the UI laggy
     from pinion.generate import generate
     from ruamel.yaml import YAML
-    import pcbnew
+    from pcbnewTransition import pcbnew
 
     yaml=YAML(typ='safe')
 
