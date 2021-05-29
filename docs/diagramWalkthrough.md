@@ -58,7 +58,8 @@ To save you some typing, Pinion can generate a template for your. Simply invoke:
 pinion template \
     --board <path to .kicad_pcb file> \
     --output <path to YAML file> \
-    --components <comma separated list of component references>
+    --components <reqular expression for the reference>
+    --components <you can specify multiple patterns if you need to>
 ```
 
 Then you can modify the template as you need.

@@ -38,8 +38,8 @@ class CliList(click.ParamType):
     help="Source KiCAD board (*.kicad_pcb)")
 @click.option("-o", "--output", type=click.File("w"), required=True,
     help="Filepath or stdout (when '-' specified) for the resulting template")
-@click.option("-c", "--components", type=CliList(), default=None,
-    help="Include only specified components in the template")
+@click.option("-c", "--components", type=str, default=None, multiple=True,
+    help="Include only components mathing regex in the template")
 def template(board, output, components):
     """
     Output a template for pinout specification based on specified board
@@ -50,6 +50,7 @@ def template(board, output, components):
     from pcbnewTransition import pcbnew
 
     pcb = pcbnew.LoadBoard(board)
+    print(components)
     generateTemplate(pcb, output, components)
 
 @click.command("generate")

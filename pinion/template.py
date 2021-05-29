@@ -1,4 +1,5 @@
 import os
+import re
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import Comment, CommentedSeq, CommentedMap
 
@@ -24,7 +25,7 @@ def collectComponents(board, components=None):
     """
     d = CommentedMap()
     footprints = [f for f in board.GetFootprints()
-        if components is None or f.GetReference() in components]
+        if components is None or any([re.match(c, f.GetReference()) for c in components])]
     footprints.sort(key=lambda f: f.GetReference())
     for i, f in enumerate(footprints):
         description = CommentedMap()
