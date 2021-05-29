@@ -141,30 +141,18 @@ function ComponentHighligh(props) {
 function PinHighlight(props) {
     let pin = props.pin;
     let shape = pin.shape;
-    let pos = props.transform(pin.pos);
     let polySpec = shape
         .map(p => props.transform(p))
         .map(p => `${p[0]},${p[1]}`).join(" ");
     return <>
-        <g transform={`translate(${pos[0]}, ${pos[1]})`}>
-            <g transform={`translate(${-pos[0]}, ${-pos[1]})`}>
-                <polygon
-                    points={polySpec}
-                    fill="none"
-                    strokeWidth="1"
-                    stroke="rgba(255, 255, 255, 200)"
-                    style={{
-                        filter: "url(#sharpBlur)"
-                    }}/>
-            </g>
-            <animateTransform attributeName="transform"
-                additive="sum"
-                type="scale"
-                values="0.8; 1; 0.8"
-                begin="0s"
-                dur="4s"
-                repeatCount="indefinite"/>
-        </g>
+        <polygon
+            points={polySpec}
+            fill="none"
+            strokeWidth="1"
+            stroke="rgba(255, 255, 255, 200)"
+            style={{
+                filter: "url(#sharpBlur)"
+            }}/>
         <polygon
             points={polySpec}
             fill="none"
