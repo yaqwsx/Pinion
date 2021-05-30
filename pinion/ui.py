@@ -105,6 +105,20 @@ def get(what, output):
     import pinion.get
     return pinion.get.get(what, output)
 
+@click.command("serve")
+@click.option("--directory", "-d", type=click.Path(dir_okay=True, file_okay=False),
+    default="./", help="Directory to serve")
+@click.option("--port", "-p", type=int, default=3333,
+    help="Port on which to run a webserver")
+@click.option("--browser", "-b", is_flag=True,
+    help="Automatically open web browser")
+def serve(directory, port, browser):
+    """
+    Serve pinion digram generated with the '--packed' option.
+    """
+    from pinion.serve import serve
+    return serve(directory, port, browser)
+
 @click.group()
 @click.version_option(__version__)
 def cli():
@@ -116,6 +130,7 @@ def cli():
 cli.add_command(template)
 cli.add_command(generate)
 cli.add_command(get)
+cli.add_command(serve)
 
 if __name__ == "__main__":
     cli()

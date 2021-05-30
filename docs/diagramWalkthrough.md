@@ -97,6 +97,14 @@ specify the option `--pack` that will include `pinion-widget` and a simple,
 stand-alone page with the diagram. You should upload the entire directory on
 your web page.
 
+## Testing the diagram
+
+When you invoke `pinion generate` with `--pack` you can test the diagram without
+embedding it in a web page. The option `--pack` will pack the diagram with
+Pinion widget and a simple page that includes the widget. Then simply invoke
+`pinion serve -b --directory <diagram directory>` to preview the diagram in your
+browser.
+
 ## Including the pinion widget on your webpage
 
 Including pinion on a web page is simple. Just include the `pinion-widget`

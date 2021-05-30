@@ -18,5 +18,5 @@ If the diagram does not show up, there can be several reasons:
 - you open a page from local file system (the URL in browser starts with
   `file://`). In that case `pinion-widget` is not able to load the specification
   as modern browsers prevent from loading local files (due to security reasons).
-  Try running `python3 -m http.server 8000` in the directory and then open
-  `http://localhost:8000` in your browser.
+  Try running `pinion server -b -d <directory>` with the directory containing
+  the diagram.
