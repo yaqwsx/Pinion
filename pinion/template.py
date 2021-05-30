@@ -25,7 +25,7 @@ def collectComponents(board, components=None):
     """
     d = CommentedMap()
     footprints = [f for f in board.GetFootprints()
-        if components is None or any([re.match(c, f.GetReference()) for c in components])]
+        if components is None or len(components) == 0 or any([re.match(c, f.GetReference()) for c in components])]
     footprints.sort(key=lambda f: f.GetReference())
     for i, f in enumerate(footprints):
         description = CommentedMap()
