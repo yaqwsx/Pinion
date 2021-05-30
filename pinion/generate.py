@@ -87,6 +87,8 @@ def componentsDefinition(spec, board):
         defs.append({
             "ref": ref,
             "description": s["description"],
+            "front": footprint.GetLayer() == pcbnew.F_Cu,
+            "back": footprint.GetLayer() == pcbnew.B_Cu,
             "highlight": s.get("highlight", False),
             "bbox": serializeEdaRect(footprint.GetBoundingBox(False, False)),
             "groups": getGroup(s),

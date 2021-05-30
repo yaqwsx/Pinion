@@ -331,10 +331,10 @@ export function PinionWidget(props) {
         ? x => x
         : x => [-x[0], x[1]];
 
-    let isPinVisible = pin => (frontActive && pin.front) || (!frontActive && pin.back);
+    let isItemVisible = item => (frontActive && item.front) || (!frontActive && item.back);
 
-    let allPins = spec.components.flatMap(x => x.pins).filter(x => isPinVisible(x));
-    let allComponents = spec.components.filter(x => x.highlight);
+    let allPins = spec.components.flatMap(x => x.pins).filter(x => isItemVisible(x));
+    let allComponents = spec.components.filter(x => x.highlight).filter(x => isItemVisible(x));
 
     let highlightedPins = allPins
         .filter(pin => pin.groups.some(group => visibleGroups[group]));
