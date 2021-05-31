@@ -4,7 +4,8 @@ import GridLoader from "react-spinners/GridLoader";
 import { css } from "@emotion/react";
 import ReactMarkdown from 'react-markdown'
 import './pinion-widget.scoped.css';
-import {FlatRootCheckbox} from "./checkbox-tree"
+import {FlatRootCheckbox} from "./checkbox-tree";
+import _ from "lodash";
 
 const loaderCss = css`
   display: block;
@@ -215,7 +216,14 @@ function PinDescription(props) {
     }
     return <>
         <h1 className="text-2xl font-semibold">
-            Pin {pin.name}
+            <div class="inline-block rounded-full mr-1"
+                 style={{
+                    width: "1em",
+                    height: "1em",
+                    backgroundColor: props.color
+                 }}>
+            </div>
+            {pin.name}
         </h1>
         <p className="py-1 mb-2 border-gray-300 border-b-2">
             Member of groups: {pin.groups.join(", ")}
@@ -257,8 +265,62 @@ function PinTooltip(props) {
             {props.pin.name}
         </div>
     </div>;
+}
 
+function Help(props) {
+    const [expanded, setExpanded] = useState(false);
 
+    return <div {...props}>
+        <button className="p-2" onClick={() => setExpanded(!expanded)}>
+            <svg width="1.5em" height="1.5em" viewBox="0 0 50 50" className="inline-block">
+                <circle cx="25" cy="25" r="20" fill="#2590EB" />
+                <text x="50%" y="50%" textAnchor="middle" fill="white" fontSize="20px" fontFamily="Verdana" dy=".3em">?</text>
+                ?
+            </svg>
+            How to use this diagram?
+        </button>
+        {
+            !expanded ? null :
+            <div className="p-4 text-left text-base border-gray-100 border-2 shadow rounded">
+                <p>
+                    The diagram is divided into three columns/sections:
+                </p>
+                <ul>
+                    <li>The first sections allows to highlight group of pins. You
+                        can use the arrow next to the group to expand it and
+                        see the nested groups.
+                    </li>
+                    <li>The middle sections shows you the PCB. You can hover
+                        with your mouse over the pins and component or click on them.
+                    </li>
+                    <li>The last section shows you detailed description of the pin.
+                    </li>
+                </ul>
+                <p>By default a pin or component description is shown if you
+                    hover with mouse over it. You can also see the description
+                    in the last section. If you want, you can pin the pins or
+                    components by clicking them. You can unpin them by clicking
+                    on them again. The colors of the pinned components cycle, so
+                    you can easily distinguish the pins. This is useful when
+                    you actually make connections on the real board based
+                    on the diagram.</p>
+
+                <button className="w-full rounded p-3 my-1 shadow bg-blue-400"
+                    onClick={() => setExpanded(false)}>
+                    OK, got it!
+                </button>
+            </div>
+        }
+    </div>;
+}
+
+function chooseColor(palette, assignedColors) {
+    let occurences = _.countBy(assignedColors);
+    let least = _.min(Object.values(occurences));
+    let color = _.find(palette, c => occurences[c] === undefined);
+    if (color !== undefined)
+        return color
+    return _.find(palette, c => occurences[c] === least);
 }
 
 export function PinionWidget(props) {
@@ -267,9 +329,10 @@ export function PinionWidget(props) {
     const [visibleGroups, setVisibleGroups] = useState({});
     const [activePin, setActivePin] = useState(null)
     const [activeComponent, setActiveComponent] = useState(null);
-    const [pinnedPin, setPinnedPin] = useState(null)
+    const [pinnedPins, setPinnedPins] = useState(new Map()) // Mapping from pin to colors
     const [pinnedComponent, setPinnedComponent] = useState(null);
     const [frontActive, setFrontActive] = useState(true);
+    const [maximized, setMaximized] = useState(false);
     const { observe, width } = useDimensions({
         onResize: ({ observe, unobserve, width, height, entry }) => {
             unobserve();
@@ -297,21 +360,27 @@ export function PinionWidget(props) {
         if (activePin === pin)
             setActivePin(null)
     };
+
     let handleComponentLeave = c => {
         if (activeComponent === c)
             setActiveComponent(null)
     }
 
     let handlePinClick = pin => {
-        setPinnedPin(pin);
-        setPinnedComponent(null);
+        let newPins = new Map(pinnedPins);
+        if (pinnedPins.get(pin))
+            newPins.delete(pin);
+        else
+            newPins.set(pin, chooseColor(palette, Array.from(newPins.values())));
+        setPinnedPins(newPins);
     }
+
     let handleComponentClick = c => {
-        setPinnedPin(null);
+        // setPinnedPin(null);
         setPinnedComponent(c);
     };
     let handleMisClick = () => {
-        setPinnedPin(null);
+        // setPinnedPins({});
         setPinnedComponent(null);
     }
 
@@ -325,6 +394,8 @@ export function PinionWidget(props) {
             ...visibleGroups,
             ...change});
     }
+
+    let palette = ["#FFA200", "#8ac926", "#1982c4", "#3644FF", "#FF80F2"];
 
     let side = frontActive ? spec.front : spec.back;
     let sideTransform = frontActive
@@ -341,9 +412,8 @@ export function PinionWidget(props) {
     let highlightedComponents = allComponents
         .filter(c => c.groups.some(group => visibleGroups[group]))
 
-    let selectedPin = activePin === null ? pinnedPin : activePin;
     let activePins = allPins
-        .filter(pin => selectedPin && pin.name === selectedPin.name );
+        .filter(pin => activePin && pin.name === activePin.name );
 
     let selectedComponent = activeComponent === null ? pinnedComponent : activeComponent;
     let activeComponents = allComponents
@@ -364,11 +434,16 @@ export function PinionWidget(props) {
         labelStyle = {minHeight: "300px"};
     }
 
-
-    return <div ref={observe} className="w-full p-4 font-sans">
-        <h1 className="text-2xl font-semibold">
-            {spec.name}
-        </h1>
+    return <div ref={observe} className={"w-full p-4 font-sans " +
+                                         (maximized ? "bg-white fixed inset-0 z-max" : "")}>
+        <div className="flex flex-wrap">
+            <h1 className="w-max text-2xl font-semibold flex-initial">
+                {spec.name}
+            </h1>
+            <Help
+                className="w-max align-middle text-xs flex-1 text-right"
+                style={{minWidth: "200px"}}/>
+        </div>
         <ReactMarkdown>{spec.description}</ReactMarkdown>
         <div className="w-full flex flex-wrap my-4">
             <div className={"my-4 px-4 flex-none " + treeClass} style={treeStyle}>
@@ -430,6 +505,12 @@ export function PinionWidget(props) {
                                                   transform={sideTransform}
                                                   color="#DC2626"/>
                                 ),
+                                Array.from(pinnedPins.entries()).map(([pin, color], i) =>
+                                    <PinHighlight key={`pi${i}`}
+                                                  pin={pin}
+                                                  transform={sideTransform}
+                                                  color={color}/>
+                                ),
                                 highlightedComponents.map((c, i) =>
                                     <ComponentHighligh key={`ch${i}`}
                                                        component={c}
@@ -441,12 +522,16 @@ export function PinionWidget(props) {
                                                        component={c}
                                                        transform={sideTransform}
                                                        color="#7C3AED"/>
-                                ),
+                                )
                             )
                         }
                     />
             </div>
             <div className={"my-4 px-2 flex-auto " + labelClass} style={labelStyle}>
+                <button className="w-full rounded p-3 mb-2 shadow bg-blue-400"
+                        onClick={() => setMaximized(!maximized)}>
+                    { maximized ? "Minimize" : "Maximize" }
+                </button>
                 <div className="w-full flex mb-4">
                     <button className={"flex-1 mr-1 rounded p-3 shadow " + (frontActive ? "bg-blue-400" : "bg-blue-200")}
                             onClick={() => setFrontActive(true)}>
@@ -457,8 +542,13 @@ export function PinionWidget(props) {
                         Back side
                     </button>
                 </div>
-                <PinDescription pin={selectedPin} allPins={allPins}/>
                 <ComponentDescription component={selectedComponent}/>
+                <PinDescription pin={activePin} allPins={allPins} color="DC2626"/>
+                {
+                    Array.from(pinnedPins.entries()).map(([pin, color], i) =>
+                        <PinDescription key={i} color={color} pin={pin} allPins={allPins}/>
+                    )
+                }
             </div>
         </div>
         <div className="w-full my-4 text-xs text-gray-600 text-sm text-right">
