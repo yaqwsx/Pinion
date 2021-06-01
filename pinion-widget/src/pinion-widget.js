@@ -543,7 +543,7 @@ export function PinionWidget(props) {
                     </button>
                 </div>
                 <ComponentDescription component={selectedComponent}/>
-                <PinDescription pin={activePin} allPins={allPins} color="DC2626"/>
+                <PinDescription pin={activePin} allPins={allPins} color="#DC2626"/>
                 {
                     Array.from(pinnedPins.entries()).map(([pin, color], i) =>
                         <PinDescription key={i} color={color} pin={pin} allPins={allPins}/>
