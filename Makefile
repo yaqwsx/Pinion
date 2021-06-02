@@ -8,7 +8,6 @@ web:
 	mkdocs build
 
 package:
-	releng/syncWidgetVersion.sh
 	releng/updatePinionWidgetResources.sh
 
 	rm -f dist/*
