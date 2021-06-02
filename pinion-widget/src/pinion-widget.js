@@ -77,8 +77,8 @@ function PcbMap(props) {
                 return <PcbHotSpot  key={idx}
                                     shape={spot.shape}
                                     transform={transform}
-                                    onMouseEnter={spot.onMouseEnter}
-                                    onMouseLeave={spot.onMouseLeave}
+                                    onHoverStart={spot.onHoverStart}
+                                    onHoverEnd={spot.onHoverEnd}
                                     onClick={spot.onClick}/>;
             })
         }
@@ -95,8 +95,21 @@ function PcbHotSpot(props) {
             style={{"fill": "rgba(0,0,0,0)"}}
             strokeWidth="1"
             stroke="rgba(0,0,0,0)"
-            onMouseEnter={e => props.onMouseEnter ? props.onMouseEnter(e) : null}
-            onMouseLeave={e => props.onMouseLeave ? props.onMouseLeave(e) : null}
+            onMouseEnter={e => props.onHoverStart ? props.onHoverStart(e) : null}
+            onMouseLeave={e => props.onHoverEnd ? props.onHoverEnd(e) : null}
+            onTouchStart={e => props.onHoverStart ? props.onHoverStart(e) : null}
+            onTouchEnd={e => props.onHoverEnd ? props.onHoverEnd(e) : null}
+            onTouchMove={e => {
+                let touches = e.nativeEvent.changedTouches;
+                var target = document.elementFromPoint(touches[0].clientX, touches[0].clientY);
+                target.dispatchEvent(
+                    new TouchEvent("touchstart", {
+                      view: window,
+                      bubbles: true,
+                      cancelable: true
+                    })
+                  );
+            }}
             onClick={e => props.onClick ? props.onClick(e) : null}/>
 }
 
@@ -216,7 +229,7 @@ function PinDescription(props) {
     }
     return <>
         <h1 className="text-2xl font-semibold">
-            <div class="inline-block rounded-full mr-1"
+            <div className="inline-block rounded-full mr-1"
                  style={{
                     width: "1em",
                     height: "1em",
@@ -471,14 +484,14 @@ export function PinionWidget(props) {
                             [].concat(
                                 allComponents.map(c => { return {
                                     "shape": bboxToPoly(c.bbox),
-                                    "onMouseEnter": () => setActiveComponent(c),
-                                    "onMouseLeave": () => handleComponentLeave(c),
+                                    "onHoverStart": () => setActiveComponent(c),
+                                    "onHoverEnd": () => handleComponentLeave(c),
                                     "onClick": e => {e.stopPropagation(); handleComponentClick(c)}
                                 }}),
                                 allPins.map(pin => { return {
                                     "shape": pin.shape,
-                                    "onMouseEnter": () => setActivePin(pin),
-                                    "onMouseLeave": () => handlePinLeave(pin),
+                                    "onHoverStart": () => setActivePin(pin),
+                                    "onHoverEnd": () => handlePinLeave(pin),
                                     "onClick": e => {e.stopPropagation(); handlePinClick(pin)}
                                 }})
                             )
