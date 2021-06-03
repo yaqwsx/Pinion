@@ -114,7 +114,7 @@ def get(what, output):
     help="Automatically open web browser")
 def serve(directory, port, browser):
     """
-    Serve pinion digram generated with the '--packed' option.
+    Serve pinion digram generated with the '--pack' option.
     """
     from pinion.serve import serve
     return serve(directory, port, browser)
