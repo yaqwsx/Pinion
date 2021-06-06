@@ -114,7 +114,7 @@ function PcbHotSpot(props) {
 }
 
 function PcbHtmlAnnotation(props) {
-    return <div className="w-max absolute"
+    return <div className="w-max absolute py-4"
                 style={{"left": props.mapX(props.pos[0]), "top": props.mapY(props.pos[1])}}>
                     {props.content}
             </div>;
@@ -340,9 +340,9 @@ function PinionLayout(props) {
     const { observe: containerRef, height: containerHeight } = useDimensionsTrivial();
     const { observe: headerRef, height: headerHeight } = useDimensionsTrivial();
 
-    let contentHeight = props.fit ? containerHeight - headerHeight : "auto"
+    let { head, children, footer, fit, ...others } = props;
+    let contentHeight = fit ? containerHeight - headerHeight : "auto"
 
-    let { head, children, footer, ...others } = props;
     return <div ref={containerRef} className="w-full h-full relative top-0 left-0 " {...others}>
         <div ref={headerRef} className="w-full overflow-auto">
             { head }
@@ -504,7 +504,7 @@ export function PinionWidget(props) {
                 head={<PinionHeader spec={spec}/>}
                 footer={<PinionFooter/>}>
             <div className="w-full flex flex-wrap my-4 h-full">
-                <div className={"px-4 flex-none max-h-full " + treeClass} style={treeStyle}>
+                <div className={"px-4 py-4 flex-none max-h-full " + treeClass} style={treeStyle}>
                     <GroupSelector
                         groups={spec.groups}
                         visible={visibleGroups}
@@ -514,7 +514,7 @@ export function PinionWidget(props) {
                 <div className={"flex-1 px-4 max-h-full " + pcbClass}
                     style={pcbStyle}
                     onClick={handleMisClick}>
-                    <PcbMap className="mx-auto max-h-full py-2"
+                    <PcbMap className="mx-auto max-h-full py-4"
                             src={props.source + "/" + side.file}
                             area={side.area}
                             transform={sideTransform}
@@ -585,7 +585,7 @@ export function PinionWidget(props) {
                             }
                         />
                 </div>
-                <div className={"px-2 flex-auto max-h-full " + labelClass} style={labelStyle}>
+                <div className={"px-2 py-4 flex-auto max-h-full " + labelClass} style={labelStyle}>
                     <button className="w-full rounded p-3 mb-2 shadow bg-blue-400"
                             onClick={() => setMaximized(!maximized)}>
                         { maximized ? "Minimize" : "Maximize" }
