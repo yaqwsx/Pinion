@@ -12,10 +12,10 @@ def collectPins(footprint):
     pins = CommentedMap()
     for i, pad in enumerate(footprint.Pads()):
         p = CommentedMap()
-        p.insert(0, "name", f"{footprint.GetReference()}.{pad.GetName()}")
+        p.insert(0, "name", pad.GetNetname())
         p.insert(1, "description", "")
         p.insert(2, "groups", [])
-        pins.insert(i, pad.GetName(), p, f"Connected to {pad.GetNetname()}")
+        pins.insert(i, pad.GetName(), p)
     return pins
 
 def collectComponents(board, components=None):
