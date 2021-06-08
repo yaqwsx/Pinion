@@ -351,7 +351,7 @@ function PinionLayout(props) {
              style={{height: contentHeight}}>
             { children }
         </div>
-        <div className="w-full absolute bottom-0 right-0">
+        <div className="w-full absolute bottom-0 right-0 z-min">
             { footer }
         </div>
     </div>

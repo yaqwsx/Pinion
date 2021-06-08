@@ -69,3 +69,7 @@ a {
 .z-max {
     z-index: 999999;
 }
+
+.z-min {
+    z-index: -999999;
+}
