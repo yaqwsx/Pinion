@@ -36,7 +36,7 @@ function bboxToPoly(bbox) {
 }
 
 function PcbMap(props) {
-    const { observe, width, height } = useDimensions({
+    const { observe, width, height, entry } = useDimensions({
         onResize: ({ observe, unobserve, width, height, entry }) => {
             unobserve();
             observe();
@@ -46,8 +46,22 @@ function PcbMap(props) {
     let {area, src, transform, hotspots, className,
          htmlAnnotations, svgAnnotations, ...others} = props;
 
-    let mapX = x => (transform([x, 0])[0] - area.tl[0]) / (area.br[0] - area.tl[0]) * width;
-    let mapY = y => (transform([0, y])[1] - area.tl[1]) / (area.br[1] - area.tl[1]) * height;
+    let mapX = x => 0;
+    let mapY = y => 0;
+    let overlayStyle = {};
+    let overlayViewbox = "0 0 0 0";
+    if (entry) {
+        let imgTarget = entry.target;
+        overlayStyle = {
+            height: height,
+            width: width,
+            left: imgTarget.offsetLeft,
+            top: imgTarget.offsetTop
+        };
+        overlayViewbox = `${area.tl[0]} ${area.tl[1]} ${area.br[0] - area.tl[0]} ${area.br[1] - area.tl[1]}`;
+        mapX = x => (transform([x, 0])[0] - area.tl[0]) / (area.br[0] - area.tl[0]) * width + imgTarget.offsetLeft;
+        mapY = y => (transform([0, y])[1] - area.tl[1]) / (area.br[1] - area.tl[1]) * height + imgTarget.offsetTop;
+    }
 
     return <div className={"max-w-max relative top-0 left-0 h-full max-h-full " + className} {...others}>
         <img src={src}
@@ -55,8 +69,9 @@ function PcbMap(props) {
                 className="tight-shadow max-h-full"
                 ref={observe}/>
         {/* SVG for drawing annotations */}
-        <svg className="absolute top-0 left-0 w-full h-full"
-            viewBox={`${area.tl[0]} ${area.tl[1]} ${area.br[0] - area.tl[0]} ${area.br[1] - area.tl[1]}`}>
+        <svg className="absolute top-0 left-0"
+            style={overlayStyle}
+            viewBox={overlayViewbox}>
         {
             props.svgAnnotations ? props.svgAnnotations : null
         }
@@ -70,8 +85,9 @@ function PcbMap(props) {
             )
         }
         {/* SVG with hotspots */}
-        <svg className="absolute top-0 left-0 w-full h-full"
-            viewBox={`${area.tl[0]} ${area.tl[1]} ${area.br[0] - area.tl[0]} ${area.br[1] - area.tl[1]}`}>
+        <svg className="absolute top-0 left-0"
+            style={overlayStyle}
+            viewBox={overlayViewbox}>
         {
             hotspots.map((spot, idx) => {
                 return <PcbHotSpot  key={idx}
@@ -114,7 +130,7 @@ function PcbHotSpot(props) {
 }
 
 function PcbHtmlAnnotation(props) {
-    return <div className="w-max absolute py-4"
+    return <div className="w-max absolute"
                 style={{"left": props.mapX(props.pos[0]), "top": props.mapY(props.pos[1])}}>
                     {props.content}
             </div>;
