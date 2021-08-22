@@ -2,9 +2,11 @@
 
 all: web package
 
-web:
+web: package
 	releng/buildAlksDiagram.sh
 	releng/buildWidgetReleases.sh
+	cp dist/*.whl docs/releases/latest/pinion-latest.whl
+	cp dist/*.tar.gz docs/releases/latest/pinion-latest.tar.gz
 	mkdocs build
 
 package:
