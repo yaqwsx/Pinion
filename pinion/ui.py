@@ -1,6 +1,7 @@
 import click
 import csv
 import io
+import sys
 from pinion import __version__
 
 def splitStr(delimiter, escapeChar, s):
@@ -58,7 +59,7 @@ def template(board, output, components):
 @click.option("-b", "--board",
     type=click.Path(file_okay=True, dir_okay=False, exists=True), required=True,
     help="Source KiCAD board (*.kicad_pcb)")
-@click.option("-s", "--specification", type=click.File("r"),
+@click.option("-s", "--specification", type=click.File("r"), required=True,
     help="YAML specification of the pinout")
 @click.option("--pack/--no-pack", default=True,
     help="Pack pinion-widget with the source")
