@@ -30,6 +30,7 @@ components: # A dictionary of component reference to component description
         description: <component description>
         groups: <a list of groups>
         highlight: true/false
+        highlightBoth: true/false # Forces that the component can be highlighted on both front and back
         pins: # A dictionary of pin names to pin description
             <pinName>:
                 name: <human readable name of the pin>

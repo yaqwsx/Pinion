@@ -84,11 +84,12 @@ def componentsDefinition(spec, board):
     defs = []
     for ref, s in spec.items():
         footprint = board.FindFootprintByReference(ref)
+        highlightBoth = s.get("highlightBoth", False)
         defs.append({
             "ref": ref,
             "description": s["description"],
-            "front": footprint.GetLayer() == pcbnew.F_Cu,
-            "back": footprint.GetLayer() == pcbnew.B_Cu,
+            "front": highlightBoth or footprint.GetLayer() == pcbnew.F_Cu,
+            "back": highlightBoth or footprint.GetLayer() == pcbnew.B_Cu,
             "highlight": s.get("highlight", False),
             "bbox": serializeEdaRect(footprint.GetBoundingBox(False, False)),
             "groups": getGroup(s),

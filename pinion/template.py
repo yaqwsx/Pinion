@@ -33,6 +33,7 @@ def collectComponents(board, components=None):
         description.insert(1, "groups", [], "Specify component groups")
         description.insert(2, "pins", collectPins(f))
         description.insert(3, "highlight", False, "Make the component active")
+        description.insert(4, "highlightBoth", f.HasThroughHolePads())
         d.insert(i, f.GetReference(), description)
     return d
 

@@ -51,7 +51,6 @@ def template(board, output, components):
     from pcbnewTransition import pcbnew
 
     pcb = pcbnew.LoadBoard(board)
-    print(components)
     generateTemplate(pcb, output, components)
 
 @click.command("generate")
