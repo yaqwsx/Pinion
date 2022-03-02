@@ -19,7 +19,7 @@ jobs:
             kicad npm
           sudo npm install -g npm@latest
 
-          sudo python -m pip install mkdocs svgpathtools
+          sudo python -m pip install mkdocs svgpathtools==1.4.1
           sudo python -m pip install -e .
           cd pinion-widget
           npm install
