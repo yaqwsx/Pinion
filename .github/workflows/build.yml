@@ -12,16 +12,20 @@ jobs:
       - name: Install dependencies and Pinion
         run: |
           set -e
+          sudo add-apt-repository --yes ppa:kicad/kicad-6.0-releases
           sudo apt -qq update
           sudo apt -qq install --yes --no-install-recommends \
-            zip inkscape make git libmagickwand-dev \
+            zip inkscape librsvg2-bin make git libmagickwand-dev \
             libgraphicsmagick1-dev libmagickcore-dev \
             kicad npm
           sudo npm install -g npm@latest
 
           sudo python -m pip install mkdocs svgpathtools==1.4.1
           sudo python -m pip install -e .
+          # Temporarily install upstream version of PcbDraw
+          pip install git+https://github.com/yaqwsx/PcbDraw@master
           cd pinion-widget
+
           npm install
           sudo npm install -g craco
 

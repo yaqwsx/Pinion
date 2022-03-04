@@ -6,12 +6,9 @@ import os
 import subprocess
 from pcbnewTransition.transition import isV6
 
-from wand.api import library
-from wand.color import Color
-from wand.image import Image
-
 from lxml import etree
 from pcbdraw.pcbdraw import svg2ki
+from pcbdraw import convert
 
 from pinion import __version__
 
@@ -97,23 +94,6 @@ def componentsDefinition(spec, board):
         })
     return defs
 
-def svgToBitmap(infilename, outfilename, dpi):
-    with Image(resolution=dpi) as image:
-        with Color('transparent') as background_color:
-            library.MagickSetBackgroundColor(image.wand,
-                                            background_color.resource)
-        image.read(filename=infilename, resolution=dpi)
-        _, ext = os.path.splitext(outfilename)
-        if ext.lower() == ".png":
-            type = "png32"
-        elif ext.lower() in [".jpg", ".jpeg"]:
-            type = "jpeg"
-        else:
-            raise RuntimeError(f"Unsupported output image type {ext}")
-        binaryBlob = image.make_blob(type)
-        with open(outfilename, "wb") as out:
-            out.write(binaryBlob)
-
 def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
     """
     Generate board image for the diagram. Returns bounding box (top let, bottom
@@ -140,7 +120,7 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
         command.append(str(svgfilename))
         subprocess.run(command, check=True)
 
-        svgToBitmap(svgfilename, outputfilename, dpi)
+        convert.svgToPng(svgfilename, outputfilename, dpi)
 
         document = etree.parse(str(svgfilename))
         tlx, tly, w, h = map(float, document.getroot().attrib["viewBox"].split())

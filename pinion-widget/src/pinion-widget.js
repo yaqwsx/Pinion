@@ -618,7 +618,7 @@ export function PinionWidget(props) {
                     </div>
                     <div className="w-full flex mb-4">
                         {
-                            pinnedPins.size == 0 && selectedComponent === null ? <></> :
+                            pinnedPins.size === 0 && selectedComponent === null ? <></> :
                             <button className="w-full rounded p-3 mb-2 shadow bg-blue-400"
                                     onClick={() => {
                                         setPinnedPins(new Map());
