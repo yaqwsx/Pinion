@@ -43,6 +43,57 @@ def serializeEdaRect(rect):
         "br": (ki2mm(rect.GetX() + rect.GetWidth()), ki2mm(rect.GetY() + rect.GetHeight()))
     }
 
+def intervalIntersection(a, b):
+    """
+    Compute interval intersection, return it as tuple or None
+    """
+    a = (min(a[0], a[1]), max(a[0], a[1]))
+    b = (min(b[0], b[1]), max(b[0], b[1]))
+    if b[0] > a[0]:
+        a, b = b, a
+    # The intervals are sorted from left to right
+    if b[0] > a[1] or b[1] < a[0]:
+        return None
+    return b[0], min(a[1], b[1])
+
+def overlappingRectComparator(a, b):
+    """
+    Compare two serialized rects based on which one contains more of the other
+    one. Since such an ordering is incomplete, the function returns the
+    following:
+    - -1 if a is below b
+    - 1 if b is below a
+    - 0 if the order doesn't matter
+    """
+    xIntersection = intervalIntersection(
+        (a["tl"][0], a["br"][0]),
+        (b["tl"][0], b["br"][0]))
+    yIntersection = intervalIntersection(
+        (a["tl"][1], a["br"][1]),
+        (b["tl"][1], b["br"][1]))
+    if xIntersection is None or yIntersection is None:
+        return 0
+    aArea = (a["br"][0] - a["tl"][0]) * (a["br"][1] - a["tl"][1])
+    bArea = (b["br"][0] - b["tl"][0]) * (b["br"][1] - b["tl"][1])
+    iArea = (xIntersection[1] - xIntersection[0]) * (yIntersection[1] - yIntersection[0])
+    if iArea / aArea > iArea / bArea:
+        return -1
+    return 1
+
+def sortByRectangles(items):
+    """
+    Implementation of insert sort on partial ordering for overlapping
+    rectangles.
+    """
+    for i in range(1, len(items)):
+        for j in reversed(range(i)):
+            cmp = overlappingRectComparator(items[j]["bbox"], items[j+1]["bbox"])
+            if cmp == 1:
+                break
+            items[j], items[j + 1] = items[j + 1], items[j]
+    return items
+
+
 def pinDefinition(spec, pad, footprint):
     """
     Given a pin specification and pad, construct description
@@ -92,6 +143,9 @@ def componentsDefinition(spec, board):
             "groups": getGroup(s),
             "pins": pinsDefinition(s.get("pins", None), footprint)
         })
+    # Sort the components so overlapping components are placed on top of each
+    # other
+    sortByRectangles(defs)
     return defs
 
 def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
