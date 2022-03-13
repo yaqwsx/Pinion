@@ -6,6 +6,8 @@ import os
 import subprocess
 from pcbnewTransition.transition import isV6
 
+from typing import Tuple, Callable, Dict, Optional
+
 from lxml import etree
 from pcbdraw.pcbdraw import svg2ki
 from pcbdraw import convert
@@ -238,17 +240,77 @@ def packPinion(outputdir):
     with open(outputdir / "template.html", "w") as f:
         get("template", f)
 
-def generate(board, specification, outputdir, dpi, pack, pcbdrawArgs):
+ImageGenerator = Callable[[pcbnew.BOARD, Path], Tuple[Dict[str, Tuple[int, int]]]]
+
+def generateDrawnImages(board: pcbnew.BOARD, outputdir: Path, dpi: int, pcbdrawArgs: any) \
+        -> Tuple[Dict[str, Tuple[int, int]]]:
+    fSource = generateImage(board.GetFileName(), outputdir / "front.png",
+        dpi, pcbdrawArgs, False)
+    bSource = generateImage(board.GetFileName(), outputdir / "back.png",
+        dpi, pcbdrawArgs, True)
+    return fSource, bSource
+
+def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
+                     orthographic: bool, raytraced: bool, componets: bool,
+                     transparent: bool, baseResolution: Tuple[int, int]):
+    from pcbdraw.renderer import (RenderAction, renderBoard, Side, postProcessCrop,
+                                  validateExternalPrerequisites, GuiPuppetError)
+
+    validateExternalPrerequisites()
+
+    postProcess = postProcessCrop(board, pcbnew.FromMM(2), pcbnew.FromMM(2), transparent)
+
+    renderPlan = [
+        RenderAction(
+            side=Side.FRONT,
+            components=componets,
+            raytraced=raytraced,
+            orthographic=orthographic,
+            postprocess=postProcess
+        ),
+        RenderAction(
+            side=Side.BACK,
+            components=componets,
+            raytraced=raytraced,
+            orthographic=orthographic,
+            postprocess=postProcess
+        )
+    ]
+
+    try:
+        images = renderBoard(board.GetFileName(), renderPlan,
+                            baseResolution=baseResolution,
+                            bgColor1=(255, 255, 255), bgColor2=(255, 255, 255))
+    except GuiPuppetError as e:
+        e.save("error.png")
+        e.message = "The following GUI error ocurred; image saved in error.png:\n" + e.message
+
+    images[0][0].save(outputdir / "front.png")
+    images[1][0].save(outputdir / "back.png")
+
+    fArea = images[0][1]
+    fAreaRect = {
+        "tl": (ki2mm(fArea[0]), ki2mm(fArea[1])),
+        "br": (ki2mm(fArea[2]), ki2mm(fArea[3]))
+    }
+    bArea = images[0][1]
+    bWidth = bArea[2] - bArea[0]
+    bAreaRect = {
+        "tl": (ki2mm(-bArea[0] - bWidth), ki2mm(bArea[1])),
+        "br": (ki2mm(-bArea[2] + bWidth), ki2mm(bArea[3]))
+    }
+    return fAreaRect, bAreaRect
+
+
+def generate(board: pcbnew.BOARD, specification: any, outputdir, pack: bool,
+             imageGenerator: ImageGenerator):
     """
     Generate board pinout diagram
     """
     outputdir = Path(outputdir)
     outputdir.mkdir(parents=True, exist_ok=True)
 
-    fSource = generateImage(board.GetFileName(), outputdir / "front.png",
-        dpi, pcbdrawArgs, False)
-    bSource = generateImage(board.GetFileName(), outputdir / "back.png",
-        dpi, pcbdrawArgs, True)
+    fSource, bSource = imageGenerator(board, outputdir)
 
     specification = {
         "pinionVersion": __version__,
