@@ -110,7 +110,7 @@ def generatePlotted(board, specification, outputdir, dpi, pack, style, libs, rem
 @click.command("rendered")
 @generateCommandArgs
 @click.option("--renderer", type=click.Choice(["raytrace", "normal"]), default="raytrace",
-    help="Specify what rendere to use")
+    help="Specify what renderer to use")
 @click.option("--projection", type=click.Choice(["orthographic", "perspective"]), default="orthographic",
     help="Specify projection")
 @click.option("--no-components", is_flag=True, default=False,

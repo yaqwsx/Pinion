@@ -5,18 +5,29 @@ for your PCBs like this (see also [a standalone version](alksStandalone.html)).
 For the sake of clarity what is documentation and what is the diagram, we put it
 inside a frame — in production, you can seamlessly include it in your page.
 
-<div style="width: 100%; border: solid 2px #2563EB; border-radius: 10px;" id="pinionDemo"></div>
+<div style="width: 100%; border: solid 2px #2563EB; border-radius: 10px;" id="pinionDemo-plot"></div>
 <script src="releases/latest/pinion.js"></script>
 <link rel="stylesheet" href="releases/latest/pinion.css">
 <script>
-    pinion.setup(document.getElementById("pinionDemo"), {
-        source: "resources/alksDemo"
+    pinion.setup(document.getElementById("pinionDemo-plot"), {
+        source: "resources/alksDemo-plotted"
     });
 </script>
 
 The diagrams are static HTML & Javascript files that you can easily include in
 your documentation. You do not need any backend, so you can easily serve them on
 your web page or Github pages. It is really simple!
+
+You can also use a 3D-rendered preview of the board instead of the stylized one:
+<div style="width: 100%; border: solid 2px #2563EB; border-radius: 10px;" id="pinionDemo-render"></div>
+<script src="releases/latest/pinion.js"></script>
+<link rel="stylesheet" href="releases/latest/pinion.css">
+<script>
+    pinion.setup(document.getElementById("pinionDemo-render"), {
+        source: "resources/alksDemo-rendered"
+    });
+</script>
+
 
 ## Making your first diagram
 

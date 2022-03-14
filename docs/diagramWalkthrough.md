@@ -70,7 +70,14 @@ Then you can modify the template as you need.
 To build the diagram, simply invoke:
 
 ```
-pinion generate \
+# For stylized image style:
+pinion generate plotted \
+    --board <path to .kicad_pcb file> \
+    --specification <your YAML file> \
+    <path to output directory>
+
+# For 3D rendered
+pinion generate rendered \
     --board <path to .kicad_pcb file> \
     --specification <your YAML file> \
     <path to output directory>
@@ -81,9 +88,15 @@ via [PcbDraw](https://github.com/yaqwsx/PcbDraw). Therefore, if you struggle to
 generate the board image correctly, try using PcbDraw directly first to locate
 the issue.
 
-That also means that you can pass PcbDraw options to `pinion generate` to e.g.,
-remap your components, specify color scheme or point PcbDraw to the right
-libraries. You read more about the details at [PcbDraw
+Note that you can also specify the option `--pack` that will include
+`pinion-widget` and a simple, stand-alone page with the diagram. You should
+upload the entire directory on your web page.
+
+## Options for stylized diagrams
+
+You can pass PcbDraw options to `pinion generate` to e.g., remap your
+components, specify color scheme or point PcbDraw to the right libraries. You
+read more about the details at [PcbDraw
 documentation](https://github.com/yaqwsx/PcbDraw/blob/master/doc/pcbdraw.md).
 
 The supported options are:
@@ -93,10 +106,16 @@ The supported options are:
     - `--remap` to remap component footprints
     - `--filter` to hide some footprint on the board.
 
-The directory is the diagram specification that can be . Note that you can also
-specify the option `--pack` that will include `pinion-widget` and a simple,
-stand-alone page with the diagram. You should upload the entire directory on
-your web page.
+## Options for 3D-rendered diagrams
+
+The 3D rendered diagrams currently work only on Linux due to technical
+limitations of KiCAD. You can also specify the following options:
+
+    - `--renderer [raytrace|normal]`: Specify what renderer to use (the OpenGL preview or raytracing)
+    - `--projection [orthographic|perspective]`: Specify projection
+    - `--no-components`: Exclude components from from rendering
+    - `--transparent `: Make transparent background of the image (so, e.g., the shadow of the image can be properly rendered)
+
 
 ## Testing the diagram
 

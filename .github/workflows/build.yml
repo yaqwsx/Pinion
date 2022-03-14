@@ -17,13 +17,15 @@ jobs:
           sudo apt -qq install --yes --no-install-recommends \
             zip inkscape librsvg2-bin make git libmagickwand-dev \
             libgraphicsmagick1-dev libmagickcore-dev \
-            kicad npm
+            kicad kicad-footprints kicad-symbols kicad-packages3d \
+            xvfb xdotool \
+            npm
           sudo npm install -g npm@latest
 
-          sudo python -m pip install mkdocs svgpathtools==1.4.1
+          sudo python -m pip install mkdocs
           sudo python -m pip install -e .
           # Temporarily install upstream version of PcbDraw
-          pip install git+https://github.com/yaqwsx/PcbDraw@master
+          pip install --force git+https://github.com/yaqwsx/PcbDraw@master
           cd pinion-widget
 
           npm install
