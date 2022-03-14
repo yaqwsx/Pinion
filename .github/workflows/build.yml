@@ -12,15 +12,19 @@ jobs:
       - name: Install dependencies and Pinion
         run: |
           set -e
+          set -x
           sudo add-apt-repository --yes ppa:kicad/kicad-6.0-releases
           sudo apt -qq update
           sudo apt -qq install --yes --no-install-recommends \
-            zip inkscape librsvg2-bin make git libmagickwand-dev \
-            libgraphicsmagick1-dev libmagickcore-dev \
+            gdb \
+            zip inkscape librsvg2-bin make git \
+            python3 python3-pip \
             kicad kicad-footprints kicad-symbols kicad-packages3d \
-            xvfb xdotool \
-            npm
-          sudo npm install -g npm@latest
+            xvfb xdotool
+
+          node --version
+          npm --version
+          npm install -g npm@latest
 
           sudo python -m pip install mkdocs
           sudo python -m pip install -e .
@@ -29,7 +33,7 @@ jobs:
           cd pinion-widget
 
           npm install
-          sudo npm install -g craco
+          npm install -g craco
 
           cd ..
           sudo chown -R $USER .
@@ -37,19 +41,21 @@ jobs:
          run: |
           set -e
           make package
-      - name: Upload pinion package artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: pinion-package
-          path: dist
-          retention-days: 14
-      - name: Upload pinion-widget package artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: pinion-widget-package
-          path: build/widget
-          retention-days: 14
+      # - name: Upload pinion package artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: pinion-package
+      #     path: dist
+      #     retention-days: 14
+      # - name: Upload pinion-widget package artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: pinion-widget-package
+      #     path: build/widget
+      #     retention-days: 14
       - run: |
+          # There's a crash, let's explore it:
+          gdb -batch -ex "run" -ex "bt" --args make web 2>&1 | grep -v ^"No stack."$
           make web
       - name: Deploy to GH Pages
         if: github.ref == 'refs/heads/main'
