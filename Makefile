@@ -13,7 +13,7 @@ package:
 	releng/updatePinionWidgetResources.sh
 
 	rm -f dist/*
-	python setup.py sdist bdist_wheel
+	python3 setup.py sdist bdist_wheel
 
 release: package
 	twine upload dist/*

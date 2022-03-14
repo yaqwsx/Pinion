@@ -29,7 +29,7 @@ nightly version of Pinon. This version is built automatically from the master
 branch and comes with newest features, however, it is not guaranteed to be
 stable.
 
-First, download the [Python package](/releases/latest/pinion-latest.whl). Then
+First, download the [Python package](https://nightly.link/yaqwsx/Pinion/workflows/build/main/pinion-package.zip). Then
 install it via pip:
 
 ```

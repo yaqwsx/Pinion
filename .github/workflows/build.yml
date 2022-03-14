@@ -15,9 +15,9 @@ jobs:
           sudo add-apt-repository --yes ppa:kicad/kicad-6.0-releases
           sudo apt -qq update
           sudo apt -qq install --yes --no-install-recommends \
-            zip inkscape librsvg2-bin make git libmagickwand-dev \
-            libgraphicsmagick1-dev libmagickcore-dev \
+            zip inkscape librsvg2-bin make git \
             kicad kicad-footprints kicad-symbols kicad-packages3d \
+            python3 python3-pip \
             xvfb xdotool \
             npm
           sudo npm install -g npm@latest
