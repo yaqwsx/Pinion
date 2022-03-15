@@ -420,13 +420,18 @@ export function PinionWidget(props) {
     const { observe, width } = useDimensionsTrivial();
 
     useEffect(() => {
-        fetchJson(props.source + "/spec.json")
-            .then(setSpec)
-            .catch(e => {
-                console.log(e);
-                setError(e.message + ": " + e.toString());
-            });
-    }, [props.source]);
+        if ("specification" in props) {
+            setSpec(props.specification);
+        }
+        else {
+            fetchJson(props.source + "/spec.json")
+                .then(setSpec)
+                .catch(e => {
+                    console.log(e);
+                    setError(e.message + ": " + e.toString());
+                });
+        }
+    }, [props.source, props.specification]);
 
     if (error)
         return <div class="errorMessage">{error}</div>;
