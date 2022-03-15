@@ -282,7 +282,7 @@ def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
                             baseResolution=baseResolution,
                             bgColor1=(255, 255, 255), bgColor2=(255, 255, 255))
     except GuiPuppetError as e:
-        e.save("error.png")
+        e.img.save("error.png")
         e.message = "The following GUI error ocurred; image saved in error.png:\n" + e.message
 
     images[0][0].save(outputdir / "front.png")

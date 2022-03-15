@@ -53,17 +53,12 @@ jobs:
       #     retention-days: 14
       - run: |
           make web
+          zip -r /imgs/dir.zip .
       - name: DBG Upload
         uses: actions/upload-artifact@v2
         with:
           name: dbg_images
           path: /imgs
-          retention-days: 7
-      - name: DBG Upload 2
-        uses: actions/upload-artifact@v2
-        with:
-          name: dbg_dir
-          path: .
           retention-days: 7
       - name: Deploy to GH Pages
         if: github.ref == 'refs/heads/main'
