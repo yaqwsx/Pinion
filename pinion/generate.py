@@ -9,7 +9,7 @@ from pcbnewTransition.transition import isV6
 from typing import Tuple, Callable, Dict, Optional
 
 from lxml import etree
-from pcbdraw.pcbdraw import svg2ki
+from pcbdraw.plot import svg2ki
 from pcbdraw import convert
 
 from pinion import __version__
