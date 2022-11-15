@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="Pinion",
-    python_requires='>3.7',
+    python_requires='>=3.7',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     author="Jan Mrázek",
@@ -26,7 +26,7 @@ setuptools.setup(
     install_requires=[
         "click>=7.1",
         "ruamel.yaml",
-        "pcbdraw>=0.8",
+        "pcbdraw>=1.0",
         "pcbnewTransition==0.2"
     ],
     setup_requires=[

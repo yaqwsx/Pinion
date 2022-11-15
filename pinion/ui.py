@@ -78,7 +78,8 @@ def generateCommandArgs(func):
 @click.option("--dpi", type=int, default=300,
     help="DPI of the generated board image")
 @click.option("--style", help="PcbDraw style specification")
-@click.option("--libs", help="PcbDraw library specification")
+@click.option("--libs", type=CliList(),
+    help="PcbDraw library specification")
 @click.option("--remap", help="PcbDraw footprint remapping specification")
 @click.option("--filter", help="PcbDraw filter specification")
 def generatePlotted(board, specification, outputdir, dpi, pack, style, libs, remap, filter):

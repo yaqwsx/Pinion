@@ -1,15 +1,12 @@
 from pathlib import Path
 from pcbnewTransition import pcbnew, isV6
 import json
-import tempfile
-import os
-import subprocess
 from pcbnewTransition.transition import isV6
 
 from typing import Tuple, Callable, Dict, Optional
 
-from lxml import etree
-from pcbdraw.pcbdraw import svg2ki
+from pcbdraw.plot import (PcbPlotter, PlotComponents, PlotSubstrate,
+                          load_remapping, mm2ki)
 from pcbdraw import convert
 
 from pinion import __version__
@@ -155,35 +152,53 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
     Generate board image for the diagram. Returns bounding box (top let, bottom
     right) active areas of the images in KiCAD native units.
     """
-    # For now, use PcbDraw as a process until we rewrite the tool so it can be
-    # used as a library. Also note that we always generate SVG first as we can
-    # easily read the active area from it. Then we manually convert it to PNG
-    with tempfile.TemporaryDirectory() as d:
-        tmpdir = Path(d)
-        svgfilename = tmpdir / "img.svg"
-        command = ["pcbdraw", "--shrink", "0"]
-        if back:
-            command.append("--back")
-        if pcbdrawArgs["style"] is not None:
-            command.extend(["--style", pcbdrawArgs["style"]])
-        if pcbdrawArgs["libs"] is not None:
-            command.extend(["--libs", pcbdrawArgs["libs"]])
-        if pcbdrawArgs["remap"] is not None:
-            command.extend(["--remap", pcbdrawArgs["remap"]])
-        if pcbdrawArgs["filter"] is not None:
-            command.extend(["--filter", pcbdrawArgs["filter"]])
-        command.append(boardfilename)
-        command.append(str(svgfilename))
-        subprocess.run(command, check=True)
 
-        convert.svgToPng(svgfilename, outputfilename, dpi)
+    plotter = PcbPlotter(boardfilename)
+    plotter.setup_arbitrary_data_path(".")
+    plotter.setup_env_data_path()
+    plotter.setup_builtin_data_path()
+    plotter.setup_global_data_path()
 
-        document = etree.parse(str(svgfilename))
-        tlx, tly, w, h = map(float, document.getroot().attrib["viewBox"].split())
-        return {
-            "tl": (ki2mm(svg2ki(tlx)), ki2mm(svg2ki(tly))),
-            "br": (ki2mm(svg2ki(tlx + w)), ki2mm(svg2ki(tly + h)))
-        }
+    plotter.yield_warning = print
+
+
+    plotter.libs = pcbdrawArgs["libs"]
+    plotter.render_back = back
+    plotter.svg_precision = 5
+    if pcbdrawArgs["style"] is not None:
+        plotter.resolve_style(pcbdrawArgs["style"])
+
+    # Prepare components
+    remapping = load_remapping(pcbdrawArgs["remap"])
+    def remapping_fun(ref: str, lib: str, name: str) -> Tuple[str, str]:
+        if ref in remapping:
+            remapped_lib, remapped_name = remapping[ref]
+            if name.endswith('.back'):
+                return remapped_lib, remapped_name + '.back'
+            else:
+                return remapped_lib, remapped_name
+        return lib, name
+
+    plot_components = PlotComponents(remapping=remapping_fun)
+    if pcbdrawArgs["filter"] is not None:
+        filter_set = set(pcbdrawArgs["filter"])
+        def filter_fun(ref: str) -> bool:
+            return ref in filter_set
+        plot_components.filter = filter_fun
+
+    plotter.plot_plan = [
+        PlotSubstrate(drill_holes=True, outline_width=mm2ki(0.2)),
+        plot_components]
+
+    image = plotter.plot()
+
+    convert.save(image, outputfilename, dpi)
+
+    tlx, tly, w, h = map(float, image.getroot().attrib["viewBox"].split())
+    return {
+        "tl": (ki2mm(plotter.svg2ki(tlx)), ki2mm(plotter.svg2ki(tly))),
+        "br": (ki2mm(plotter.svg2ki(tlx + w)), ki2mm(plotter.svg2ki(tly + h)))
+    }
 
 def collectGroups(components):
     groups = set()
@@ -282,7 +297,7 @@ def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
                             baseResolution=baseResolution,
                             bgColor1=(255, 255, 255), bgColor2=(255, 255, 255))
     except GuiPuppetError as e:
-        e.save("error.png")
+        e.img.save("error.png")
         e.message = "The following GUI error ocurred; image saved in error.png:\n" + e.message
 
     images[0][0].save(outputdir / "front.png")
