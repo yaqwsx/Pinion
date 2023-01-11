@@ -27,7 +27,7 @@ setuptools.setup(
         "click>=7.1",
         "ruamel.yaml",
         "pcbdraw>=1.0",
-        "pcbnewTransition==0.2"
+        "pcbnewTransition >= 0.2, <=0.4"
     ],
     setup_requires=[
         "versioneer"

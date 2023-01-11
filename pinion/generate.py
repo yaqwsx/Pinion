@@ -1,7 +1,6 @@
 from pathlib import Path
-from pcbnewTransition import pcbnew, isV6
+from pcbnewTransition import pcbnew, isV6, isV7
 import json
-from pcbnewTransition.transition import isV6
 
 from typing import Tuple, Callable, Dict, Optional
 
@@ -28,7 +27,7 @@ def padOutline(pad):
     Given a pad return list of points forming a polygon for the pad shape
     """
     p = pcbnew.SHAPE_POLY_SET()
-    if isV6():
+    if isV6() or isV7():
         p = pad.GetEffectivePolygon()
     else:
         pad.TransformShapeWithClearanceToPolygon(p, 0, 16, 1.0)
