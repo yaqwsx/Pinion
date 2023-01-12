@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Making a diagram - Pinion — Nice-looking interactive diagrams for KiCAD PCBs</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Making a diagram";
+        var mkdocs_page_input_path = "diagramWalkthrough.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Pinion — Nice-looking interactive diagrams for KiCAD PCBs
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Making a diagram</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#basic-concepts">Basic concepts</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#defining-a-diagram">Defining a diagram</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#building-the-diagram">Building the diagram</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#options-for-stylized-diagrams">Options for stylized diagrams</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#options-for-3d-rendered-diagrams">Options for 3D-rendered diagrams</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#testing-the-diagram">Testing the diagram</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#including-the-pinion-widget-on-your-webpage">Including the pinion widget on your webpage</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../faq/">FAQ</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Pinion — Nice-looking interactive diagrams for KiCAD PCBs</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Making a diagram</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="making-a-diagram">Making a diagram</h1>
+<p>To make a diagram you have to:</p>
+<ul>
+<li>specify which pins and components should be highlightable. This is done via
+  specifying a simple YAML file.</li>
+<li>Build the diagram. This will generate a directory with several files.</li>
+<li>Embed it in your webpage/documentation.</li>
+</ul>
+<h2 id="basic-concepts">Basic concepts</h2>
+<p>Pinion consists of two parts - diagram generator <code>pinion</code> (that you run on your
+computer) and a Javascript library that you include on your webpage, which
+reads and displays the diagram (<code>pinion-widget</code>).</p>
+<p>Pinion can highlight components and pins of components. Each of these objects
+can have assigned a verbose description. This description is shown on mouse
+hover/click. Each object can belong to any number of groups. The user has the
+ability to highlight a given group.</p>
+<h2 id="defining-a-diagram">Defining a diagram</h2>
+<p>The diagram is specified via YAML file with the following structure:</p>
+<pre><code class="language-yaml">name: &lt;name of the diagram&gt;
+description: &lt;diagram description&gt;
+components: # A dictionary of component reference to component description
+    &lt;componentRef&gt;:
+        description: &lt;component description&gt;
+        groups: &lt;a list of groups&gt;
+        highlight: true/false
+        highlightBoth: true/false # Forces that the component can be highlighted on both front and back
+        pins: # A dictionary of pin names to pin description
+            &lt;pinName&gt;:
+                name: &lt;human readable name of the pin&gt;
+                description: &lt;pin description&gt;
+                alias: &lt;pinName&gt; # Use description of other pin. Alternative for description
+                groups: &lt;a list of groups&gt;
+groups: # An optional dictionary specifying tree structure of the groups, e.g.:
+    Peripherals:
+        - Adc
+        - SPI
+        - I2C
+    Pins:
+        - Digital
+        - Analog
+</code></pre>
+<p>Note that you can use markdown in descriptions to make them pretty. You should
+specify only the pins and components you want to be highlightable.</p>
+<p>It you remember the <a href="../alksStandalone.html">example diagram</a>, it was generated by
+the <a href="../resources/alksSpec.yml">this YAML file</a>.</p>
+<p>To save you some typing, Pinion can generate a template for your. Simply invoke:</p>
+<pre><code>pinion template \
+    --board &lt;path to .kicad_pcb file&gt; \
+    --output &lt;path to YAML file&gt; \
+    --components &lt;reqular expression for the reference&gt;
+    --components &lt;you can specify multiple patterns if you need to&gt;
+</code></pre>
+<p>Then you can modify the template as you need.</p>
+<h2 id="building-the-diagram">Building the diagram</h2>
+<p>To build the diagram, simply invoke:</p>
+<pre><code># For stylized image style:
+pinion generate plotted \
+    --board &lt;path to .kicad_pcb file&gt; \
+    --specification &lt;your YAML file&gt; \
+    &lt;path to output directory&gt;
+
+# For 3D rendered
+pinion generate rendered \
+    --board &lt;path to .kicad_pcb file&gt; \
+    --specification &lt;your YAML file&gt; \
+    &lt;path to output directory&gt;
+</code></pre>
+<p>This will generate all files required. Note that the board image is generated
+via <a href="https://github.com/yaqwsx/PcbDraw">PcbDraw</a>. Therefore, if you struggle to
+generate the board image correctly, try using PcbDraw directly first to locate
+the issue.</p>
+<p>Note that you can also specify the option <code>--pack</code> that will include
+<code>pinion-widget</code> and a simple, stand-alone page with the diagram. You should
+upload the entire directory on your web page.</p>
+<h2 id="options-for-stylized-diagrams">Options for stylized diagrams</h2>
+<p>You can pass PcbDraw options to <code>pinion generate</code> to e.g., remap your
+components, specify color scheme or point PcbDraw to the right libraries. You
+read more about the details at <a href="https://github.com/yaqwsx/PcbDraw/blob/master/doc/pcbdraw.md">PcbDraw
+documentation</a>.</p>
+<p>The supported options are:
+    - <code>--dpi</code> to specify image DPI
+    - <code>--style</code> to specify style (i.e., color scheme)
+    - <code>--libs</code> to specify the footprint library
+    - <code>--remap</code> to remap component footprints
+    - <code>--filter</code> to hide some footprint on the board.</p>
+<h2 id="options-for-3d-rendered-diagrams">Options for 3D-rendered diagrams</h2>
+<p>The 3D rendered diagrams currently work only on Linux due to technical
+limitations of KiCAD. You can also specify the following options:</p>
+<pre><code>- `--renderer [raytrace|normal]`: Specify what renderer to use (the OpenGL preview or raytracing)
+- `--projection [orthographic|perspective]`: Specify projection
+- `--no-components`: Exclude components from from rendering
+- `--transparent `: Make transparent background of the image (so, e.g., the shadow of the image can be properly rendered)
+</code></pre>
+<h2 id="testing-the-diagram">Testing the diagram</h2>
+<p>When you invoke <code>pinion generate</code> with <code>--pack</code> you can test the diagram without
+embedding it in a web page. The option <code>--pack</code> will pack the diagram with
+Pinion widget and a simple page that includes the widget. Then simply invoke
+<code>pinion serve -b --directory &lt;diagram directory&gt;</code> to preview the diagram in your
+browser.</p>
+<h2 id="including-the-pinion-widget-on-your-webpage">Including the pinion widget on your webpage</h2>
+<p>Including pinion on a web page is simple. Just include the <code>pinion-widget</code>
+script, stylesheets and set it up:</p>
+<pre><code class="language-html">&lt;div id=&quot;pinionDemo&quot;&gt;&lt;/div&gt;
+
+&lt;script src=&quot;resources/pinion.js&quot;&gt;&lt;/script&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;resources/pinion.css&quot;&gt;
+
+&lt;script&gt;
+    pinion.setup(document.getElementById(&quot;pinionDemo&quot;), {
+        source: &quot;resources/alksDemo&quot;
+    });
+&lt;/script&gt;
+</code></pre>
+<p>The first block creates a container in which we will the widget will be
+included. It can be anywhere on the page. Note that we will later need to
+reference this container, so we specify an id for it.</p>
+<p>The second block loads pinion code and styles. You can either host these files
+by yourself or use CDN (will be specified later). The precise location depends
+on your setup.</p>
+<p>In the third block, we start the widget. The first argument of <code>pinion.setup</code> is
+the container for the widget and the second argument is a dictionary that
+configures the widget. Currently, the only option is <code>source</code> that has to
+contain a location to the source directory (note that it can also be an absolute
+path).</p>
+<p>And this is it. When you load your page, the diagram should be running!</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../faq/" class="btn btn-neutral float-right" title="FAQ">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../faq/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
