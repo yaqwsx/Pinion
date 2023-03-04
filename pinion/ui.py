@@ -6,6 +6,44 @@ from pathlib import Path
 from typing import Dict, Tuple
 from pinion import __version__
 from pinion.generate import generateDrawnImages
+import os
+
+
+def getDefaultFile(extension : str, existing : bool, prefix : str = "", suffix : str = ""):
+    """
+        Get a filename with the extension 'extension', defaulting to the name of the working directory.
+        If no file with that name is found, uses the alphabetically first file with the specified extension.
+        '{dirname}{extension}'.
+        :param extension: The extension to use.
+        :param existing: If this is set to False, will use the name of the directory immediatly.
+        :param prefix: An optional prefix to the filename.
+        :param suffix: An optional suffix to the filename before the extension.
+        :return: A filename, or None in case no file is found.
+    """
+    assumedName = f"{prefix}{os.path.basename(os.getcwd())}{suffix}{extension}"
+
+    if not existing or os.path.exists(assumedName):
+        return assumedName
+
+    files = list(Path(".").glob(f"*{extension}"))
+    if len(files) == 0:
+        return None
+    return str(files[0])
+
+
+def getDefaultBoardFile(existing : bool = True):
+    """
+    Gets a default value for the kicad pcb file.
+    """
+    return getDefaultFile(".kicad_pcb", existing)
+
+def getDefaultSpecificationsFile(existing : bool):
+    """
+    Gets a default value for the preferences yaml file.
+    """
+    return getDefaultFile(".yaml", existing,suffix="_pinion")
+
+
 
 def splitStr(delimiter, escapeChar, s):
     """
@@ -38,10 +76,10 @@ class CliList(click.ParamType):
 
 @click.command("template")
 @click.option("-b", "--board",
-    type=click.Path(file_okay=True, dir_okay=False, exists=True), required=True,
-    help="Source KiCAD board (*.kicad_pcb)")
-@click.option("-o", "--output", type=click.File("w"), required=True,
-    help="Filepath or stdout (when '-' specified) for the resulting template")
+    type=click.Path(file_okay=True, dir_okay=False, exists=True), default=getDefaultBoardFile(),
+    help="Source KiCAD board (*.kicad_pcb). Defaults to the directory name, or the first file found.")
+@click.option("-o", "--output", type=click.File("w"), default=getDefaultSpecificationsFile(existing=False),
+    help="Filepath or stdout (when '-' specified) for the resulting template. Defaults to the directory name.")
 @click.option("-c", "--components", type=str, default=None, multiple=True,
     help="Include only components mathing regex in the template")
 def template(board, output, components):
@@ -60,10 +98,10 @@ def template(board, output, components):
 def generateCommandArgs(func):
     @click.argument("outputdir", type=click.Path(file_okay=False, dir_okay=True))
     @click.option("-b", "--board",
-    type=click.Path(file_okay=True, dir_okay=False, exists=True), required=True,
-    help="Source KiCAD board (*.kicad_pcb)")
-    @click.option("-s", "--specification", type=click.File("r"), required=True,
-    help="YAML specification of the pinout")
+    type=click.Path(file_okay=True, dir_okay=False, exists=True), default=getDefaultBoardFile(),
+    help="Source KiCAD board (*.kicad_pcb). Defaults to the directory name, or the first file found.")
+    @click.option("-s", "--specification", type=click.File("r"), default=getDefaultSpecificationsFile(existing=True),
+    help="YAML specification of the pinout. Defaults to the directory name, or the first file found.")
     @click.option("--pack/--no-pack", default=True,
     help="Pack pinion-widget with the source")
 
