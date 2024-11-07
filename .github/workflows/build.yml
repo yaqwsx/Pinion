@@ -38,13 +38,13 @@ jobs:
           set -e
           make package
       - name: Upload pinion package artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: pinion-package
           path: dist
           retention-days: 14
       - name: Upload pinion-widget package artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: pinion-widget-package
           path: build/widget
