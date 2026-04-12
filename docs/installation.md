@@ -6,12 +6,9 @@ Pinion is a Python program. You can simply install it via pip:
 pip3 install pinion
 ```
 
-To run pinion, you will also need KiCAD 6 installed on your computer. On
-Windows, you have to make sure that you run all Pinion commands inside **KiCAD
-Command Prompt**, not in the regular command prompt. Also note that the 3D
-rendered models currently work only on Linux. Optionally, you can use [Windows
-subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-or suitable Docker image for running pinion.
+To run pinion, you will also need KiCAD 9 or newer installed on your computer.
+On Windows, you have to make sure that you run all Pinion commands inside
+**KiCAD Command Prompt**, not in the regular command prompt.
 
 Once you have Pinion installed, you can verify it by running:
 

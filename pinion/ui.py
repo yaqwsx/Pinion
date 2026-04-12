@@ -51,7 +51,7 @@ def template(board, output, components):
     # Note that we import inside functions as pcbnew import takes ~1 to load
     # which makes the UI laggy
     from pinion.template import generateTemplate
-    from pcbnewTransition import pcbnew
+    import pcbnew
 
     pcb = pcbnew.LoadBoard(board)
     generateTemplate(pcb, output, components)
@@ -90,7 +90,7 @@ def generatePlotted(board, specification, outputdir, dpi, pack, style, libs, rem
     # which makes the UI laggy
     from pinion.generate import generate, generateDrawnImages
     from ruamel.yaml import YAML
-    from pcbnewTransition import pcbnew
+    import pcbnew
 
     yaml=YAML(typ='safe')
 
@@ -116,10 +116,8 @@ def generatePlotted(board, specification, outputdir, dpi, pack, style, libs, rem
     help="Specify projection")
 @click.option("--no-components", is_flag=True, default=False,
     help="Disable component rendering")
-@click.option("--transparent", is_flag=True,
-    help="Make transparent background of the image")
 def generateRendered(board, specification, pack, outputdir, renderer,
-                     projection, no_components, transparent):
+                     projection, no_components):
     """
     Generate a pinout diagram with 3D rendered image of the board
     """
@@ -127,14 +125,13 @@ def generateRendered(board, specification, pack, outputdir, renderer,
     # which makes the UI laggy
     from pinion.generate import generate, generateRenderedImages
     from ruamel.yaml import YAML
-    from pcbnewTransition import pcbnew
+    import pcbnew
 
     yaml=YAML(typ='safe')
 
     def generateImages(board: pcbnew.BOARD, outputdir: Path) -> Tuple[Dict[str, Tuple[int, int]]]:
         return generateRenderedImages(board, outputdir,
             componets=(not no_components),
-            transparent=transparent,
             orthographic=(projection == "orthographic"),
             raytraced=(renderer == "raytrace"),
             baseResolution=(3000, 3000))

@@ -1,5 +1,5 @@
 from pathlib import Path
-from pcbnewTransition import pcbnew, isV6, isV7
+import pcbnew
 import json
 
 from typing import Tuple, Callable, Dict, Optional
@@ -9,12 +9,6 @@ from pcbdraw.plot import (PcbPlotter, PlotComponents, PlotSubstrate,
 from pcbdraw import convert
 
 from pinion import __version__
-
-def dmil2ki(val):
-    """
-    Convert KiCAD decimils to native units
-    """
-    return val * 2540
 
 def ki2mm(val):
     return val / 1000000.0
@@ -26,11 +20,9 @@ def padOutline(pad):
     """
     Given a pad return list of points forming a polygon for the pad shape
     """
-    p = pcbnew.SHAPE_POLY_SET()
-    if isV6() or isV7():
-        p = pad.GetEffectivePolygon()
-    else:
-        pad.TransformShapeWithClearanceToPolygon(p, 0, 16, 1.0)
+    layers = list(pad.GetLayerSet().CuStack())
+    layer = layers[0] if layers else pcbnew.F_Cu
+    p = pad.GetEffectivePolygon(layer)
     outline = p.Outline(0)
     points = [outline.CPoint(i) for i in range(outline.PointCount())]
     return [(ki2mm(p.x), ki2mm(p.y)) for p in points]
@@ -161,7 +153,8 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
     plotter.yield_warning = print
 
 
-    plotter.libs = pcbdrawArgs["libs"]
+    if pcbdrawArgs["libs"] is not None:
+        plotter.libs = pcbdrawArgs["libs"]
     plotter.render_back = back
     plotter.svg_precision = 5
     if pcbdrawArgs["style"] is not None:
@@ -264,54 +257,50 @@ def generateDrawnImages(board: pcbnew.BOARD, outputdir: Path, dpi: int, pcbdrawA
         dpi, pcbdrawArgs, True)
     return fSource, bSource
 
+def boardAreaRect(board: pcbnew.BOARD):
+    """
+    Get the board bounding box in mm, suitable for the pinout spec.
+    """
+    bbox = board.GetBoardEdgesBoundingBox()
+    return {
+        "tl": (ki2mm(bbox.GetX()), ki2mm(bbox.GetY())),
+        "br": (ki2mm(bbox.GetX() + bbox.GetWidth()), ki2mm(bbox.GetY() + bbox.GetHeight()))
+    }
+
 def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
                      orthographic: bool, raytraced: bool, componets: bool,
-                     transparent: bool, baseResolution: Tuple[int, int]):
-    from pcbdraw.renderer import (RenderAction, renderBoard, Side, postProcessCrop,
-                                  validateExternalPrerequisites, GuiPuppetError)
+                     baseResolution: Tuple[int, int]):
+    from pcbdraw.renderer import RenderAction, renderBoard, Side
 
-    validateExternalPrerequisites()
+    frontImage = renderBoard(board.GetFileName(), RenderAction(
+        side=Side.FRONT,
+        components=componets,
+        raytraced=raytraced,
+        orthographic=orthographic,
+        transparent=True,
+        width=baseResolution[0],
+        height=baseResolution[1],
+        padding=0,
+    ))
+    frontImage.save(outputdir / "front.png")
 
-    postProcess = postProcessCrop(board, pcbnew.FromMM(2), pcbnew.FromMM(2), transparent)
+    backImage = renderBoard(board.GetFileName(), RenderAction(
+        side=Side.BACK,
+        components=componets,
+        raytraced=raytraced,
+        orthographic=orthographic,
+        transparent=True,
+        width=baseResolution[0],
+        height=baseResolution[1],
+        padding=0,
+    ))
+    backImage.save(outputdir / "back.png")
 
-    renderPlan = [
-        RenderAction(
-            side=Side.FRONT,
-            components=componets,
-            raytraced=raytraced,
-            orthographic=orthographic,
-            postprocess=postProcess
-        ),
-        RenderAction(
-            side=Side.BACK,
-            components=componets,
-            raytraced=raytraced,
-            orthographic=orthographic,
-            postprocess=postProcess
-        )
-    ]
-
-    try:
-        images = renderBoard(board.GetFileName(), renderPlan,
-                            baseResolution=baseResolution,
-                            bgColor1=(255, 255, 255), bgColor2=(255, 255, 255))
-    except GuiPuppetError as e:
-        e.img.save("error.png")
-        e.message = "The following GUI error ocurred; image saved in error.png:\n" + e.message
-
-    images[0][0].save(outputdir / "front.png")
-    images[1][0].save(outputdir / "back.png")
-
-    fArea = images[0][1]
-    fAreaRect = {
-        "tl": (ki2mm(fArea[0]), ki2mm(fArea[1])),
-        "br": (ki2mm(fArea[2]), ki2mm(fArea[3]))
-    }
-    bArea = images[0][1]
-    bWidth = bArea[2] - bArea[0]
+    fAreaRect = boardAreaRect(board)
+    bArea = boardAreaRect(board)
     bAreaRect = {
-        "tl": (ki2mm(-bArea[0] - bWidth), ki2mm(bArea[1])),
-        "br": (ki2mm(-bArea[2] + bWidth), ki2mm(bArea[3]))
+        "tl": (-(bArea["br"][0]), bArea["tl"][1]),
+        "br": (-(bArea["tl"][0]), bArea["br"][1])
     }
     return fAreaRect, bAreaRect
 

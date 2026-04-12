@@ -1,5 +1,5 @@
 import React from "react";
-import './pinion-widget.scoped.css';
+import './pinion-widget.css';
 
 export function FlatRootCheckbox(props) {
     let {roots, sideBySide, ...otherProps} = props;

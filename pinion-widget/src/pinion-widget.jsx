@@ -1,17 +1,38 @@
-import {useState, useEffect} from "react";
-import useDimensions from "react-cool-dimensions";
+import {useState, useEffect, useRef, useCallback} from "react";
 import GridLoader from "react-spinners/GridLoader";
-import { css } from "@emotion/react";
-import ReactMarkdown from 'react-markdown'
-import './pinion-widget.scoped.css';
+import ReactMarkdown from 'react-markdown';
+import './pinion-widget.css';
 import {FlatRootCheckbox} from "./checkbox-tree";
 import _ from "lodash";
 
-const loaderCss = css`
-  display: block;
-  margin: 30px auto;
-  border-color: black;
-`;
+function useResizeObserver() {
+    const ref = useRef(null);
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const [entry, setEntry] = useState(null);
+
+    useEffect(() => {
+        const element = ref.current;
+        if (!element) return;
+        const observer = new ResizeObserver(entries => {
+            const e = entries[0];
+            setSize({
+                width: e.contentRect.width,
+                height: e.contentRect.height,
+            });
+            setEntry(e);
+        });
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
+
+    return { ref, ...size, entry };
+}
+
+const loaderStyle = {
+    display: "block",
+    margin: "30px auto",
+    borderColor: "black",
+};
 
 
 async function fetchJson(path) {
@@ -36,12 +57,7 @@ function bboxToPoly(bbox) {
 }
 
 function PcbMap(props) {
-    const { observe, width, height, entry } = useDimensions({
-        onResize: ({ observe, unobserve, width, height, entry }) => {
-            unobserve();
-            observe();
-        },
-    });
+    const { ref, width, height, entry } = useResizeObserver();
 
     let {area, src, transform, hotspots, className,
          htmlAnnotations, svgAnnotations, ...others} = props;
@@ -51,7 +67,7 @@ function PcbMap(props) {
     let overlayStyle = {};
     let overlayViewbox = "0 0 0 0";
     if (entry) {
-        let imgTarget = entry.target;
+        let imgTarget = ref.current;
         overlayStyle = {
             height: height,
             width: width,
@@ -67,7 +83,7 @@ function PcbMap(props) {
         <img src={src}
                 alt="PCB Preview"
                 className="tight-shadow max-h-full"
-                ref={observe}/>
+                ref={ref}/>
         {/* SVG for drawing annotations */}
         <svg className="absolute top-0 left-0"
             style={overlayStyle}
@@ -136,7 +152,7 @@ function PcbHtmlAnnotation(props) {
             </div>;
 }
 
-function ComponentHighligh(props) {
+function ComponentHighlight(props) {
     let c = props.component;
     let shape = bboxToPoly(c.bbox);
     let polySpec = shape
@@ -343,18 +359,9 @@ function Help(props) {
     </div>;
 }
 
-function useDimensionsTrivial() {
-    return useDimensions({
-        onResize: ({ observe, unobserve, width, height, entry }) => {
-            unobserve();
-            observe();
-        },
-    });
-}
-
 function PinionLayout(props) {
-    const { observe: containerRef, height: containerHeight } = useDimensionsTrivial();
-    const { observe: headerRef, height: headerHeight } = useDimensionsTrivial();
+    const { ref: containerRef, height: containerHeight } = useResizeObserver();
+    const { ref: headerRef, height: headerHeight } = useResizeObserver();
 
     let { head, children, footer, fit, ...others } = props;
     let contentHeight = fit ? containerHeight - headerHeight : "auto"
@@ -417,7 +424,7 @@ export function PinionWidget(props) {
     const [pinnedComponent, setPinnedComponent] = useState(null);
     const [frontActive, setFrontActive] = useState(true);
     const [maximized, setMaximized] = useState(false);
-    const { observe, width } = useDimensionsTrivial();
+    const { ref: observe, width } = useResizeObserver();
 
     useEffect(() => {
         if ("specification" in props) {
@@ -434,10 +441,10 @@ export function PinionWidget(props) {
     }, [props.source, props.specification]);
 
     if (error)
-        return <div class="errorMessage">{error}</div>;
+        return <div className="errorMessage">{error}</div>;
     if (!spec)
         return <div className="pinionWidget">
-            <GridLoader size={20} css={loaderCss}/>
+            <GridLoader size={20} cssOverride={loaderStyle}/>
         </div>
 
     let handlePinLeave = pin => {
@@ -460,16 +467,13 @@ export function PinionWidget(props) {
     }
 
     let handleComponentClick = c => {
-        // setPinnedPin(null);
         setPinnedComponent(c);
     };
     let handleMisClick = () => {
-        // setPinnedPins({});
         setPinnedComponent(null);
     }
 
     let handleGroupVisibility = (groups, state) => {
-        // We cannot use Object.fromEntries as Qutebrowser does not support it
         let change = {};
         groups.forEach(element => {
             change[element] = state;
@@ -513,7 +517,6 @@ export function PinionWidget(props) {
         treeSideBySide = true;
         pcbClass = "w-full mx-auto";
         pcbStyle = { maxWidth: "800px" };
-        // We add the border so the user is aware that there is a container
         labelClass = "w-full border-gray-600 border-l-2";
         labelStyle = {minHeight: "300px"};
     }
@@ -591,13 +594,13 @@ export function PinionWidget(props) {
                                                     color={color}/>
                                     ),
                                     highlightedComponents.map((c, i) =>
-                                        <ComponentHighligh key={`ch${i}`}
+                                        <ComponentHighlight key={`ch${i}`}
                                                         component={c}
                                                         transform={sideTransform}
                                                         color="#3B82F6"/>
                                     ),
                                     activeComponents.map((c, i) =>
-                                        <ComponentHighligh key={`ca${i}`}
+                                        <ComponentHighlight key={`ca${i}`}
                                                         component={c}
                                                         transform={sideTransform}
                                                         color="#7C3AED"/>
@@ -646,4 +649,3 @@ export function PinionWidget(props) {
         </PinionLayout>
     </div>
 }
-

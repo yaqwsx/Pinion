@@ -4,35 +4,34 @@ on:
 jobs:
   build:
     name: "Build pinion documentation"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        kicad: ["9", "10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Install dependencies and Pinion
         run: |
           set -e
-          sudo add-apt-repository --yes ppa:kicad/kicad-6.0-releases
-          sudo apt -qq update
-          sudo apt -qq install --yes --no-install-recommends \
+          sudo add-apt-repository --yes ppa:kicad/kicad-${{ matrix.kicad }}.0-releases
+          sudo apt-get -qq update
+          sudo apt-get -qq install --yes --no-install-recommends \
             zip inkscape librsvg2-bin make git \
             kicad kicad-footprints kicad-symbols kicad-packages3d \
             python3 python3-pip \
-            xvfb xdotool \
             npm
-          sudo npm install -g npm@latest
 
-          sudo python -m pip install mkdocs
-          sudo python -m pip install -e .
+          python3 -m pip install --break-system-packages mkdocs
+          python3 -m pip install --break-system-packages -e .
           # Temporarily install upstream version of PcbDraw
-          pip install --force git+https://github.com/yaqwsx/PcbDraw@master
+          python3 -m pip install --break-system-packages --force git+https://github.com/yaqwsx/PcbDraw@master
           cd pinion-widget
 
           npm install
-          sudo npm install -g craco
-
           cd ..
-          sudo chown -R $USER .
       -  name: Build pinion package
          run: |
           set -e
@@ -40,20 +39,20 @@ jobs:
       - name: Upload pinion package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pinion-package
+          name: pinion-package-kicad${{ matrix.kicad }}
           path: dist
           retention-days: 14
       - name: Upload pinion-widget package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pinion-widget-package
+          name: pinion-widget-package-kicad${{ matrix.kicad }}
           path: build/widget
           retention-days: 14
       - run: |
           make web
       - name: Deploy to GH Pages
-        if: github.ref == 'refs/heads/main'
-        uses: JamesIves/github-pages-deploy-action@4.1.0
+        if: github.ref == 'refs/heads/main' && matrix.kicad == '10'
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: site
