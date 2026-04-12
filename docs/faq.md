@@ -2,12 +2,9 @@
 
 ## Pinion says `pcbnew: no module found`
 
-This message probably means that you either:
-
-- you are running Windows or Mac. In that case until KiCAD 6 is released, you
-  have to use one of the alternative methods of usage - see
-  [installation](installation.md).
-- you are running Linux, but you don't have KiCAD installed
+This message probably means that you don't have KiCAD 9 or newer installed. On
+Windows, make sure you run all Pinion commands inside **KiCAD Command Prompt**,
+not in the regular command prompt. See [installation](installation.md).
 
 ## The diagram does not show up!
 

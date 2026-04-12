@@ -9,7 +9,7 @@ def get(what, output):
     }
 
     if what not in mapping:
-        raise RuntimeError(f"Uknown resource '{what}' specified")
+        raise RuntimeError(f"Unknown resource '{what}' specified")
 
     with open(os.path.join(RESOURCES, mapping[what])) as f:
         output.write(f.read())
