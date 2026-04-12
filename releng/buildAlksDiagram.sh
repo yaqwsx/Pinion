@@ -20,6 +20,5 @@ pinion generate plotted \
 pinion generate rendered \
     -b docs/resources/ArduinoLearningKitStarter.kicad_pcb \
     -s docs/resources/alksSpec.yml \
-    --transparent \
     docs/resources/alksDemo-rendered
 
