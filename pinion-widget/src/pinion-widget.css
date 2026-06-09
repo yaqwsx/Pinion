@@ -16,6 +16,10 @@ input[type=checkbox] {width:18px; height:18px;}
     filter: drop-shadow(8px 8px 8px #222);
 }
 
+.pinion-description-panel {
+    height: 18rem;
+}
+
 .right {
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);
