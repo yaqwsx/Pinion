@@ -263,12 +263,7 @@ function PinDescription(props) {
     if (props.pin === null)
         return null;
     let pin = props.pin;
-    let description = pin.description;
-    if (pin.alias && props.allPins) {
-        let candidates = props.allPins.filter(p => !p.alias && pin.alias === p.name );
-        if (candidates.length > 0)
-            description = candidates[0].description;
-    }
+    let description = resolvePinDescription(pin, props.allPins);
     return <>
         <h1 className="text-2xl font-semibold">
             <div className="inline-block rounded-full mr-1"
@@ -285,6 +280,86 @@ function PinDescription(props) {
         </p>
         <ReactMarkdown>{description}</ReactMarkdown>
     </>
+}
+
+function resolvePinDescription(pin, allPins) {
+    if (pin.alias && allPins) {
+        let candidates = allPins.filter(p => !p.alias && pin.alias === p.name);
+        if (candidates.length > 0)
+            return candidates[0].description;
+    }
+    return pin.description || "";
+}
+
+function normalizedSearchText(pin, allPins) {
+    return [
+        pin.name,
+        resolvePinDescription(pin, allPins),
+        ...(pin.groups || [])
+    ].join(" ").toLowerCase();
+}
+
+function SearchIcon() {
+    return <svg width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                strokeLinejoin="round" className="inline-block">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.3-4.3"/>
+    </svg>;
+}
+
+function XIcon() {
+    return <svg width="1.25em" height="1.25em" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                strokeLinejoin="round" className="inline-block">
+        <path d="M18 6 6 18"/>
+        <path d="m6 6 12 12"/>
+    </svg>;
+}
+
+function PinSearch(props) {
+    let query = props.query.trim().toLowerCase();
+
+    return <div className="w-full mb-4">
+        <div className="w-full flex border-2 border-gray-300 rounded">
+            <div className="p-2 text-gray-600">
+                <SearchIcon/>
+            </div>
+            <input
+                className="flex-1 p-2"
+                type="search"
+                value={props.query}
+                placeholder="Search pins"
+                onChange={e => props.onQueryChange(e.target.value)}/>
+            {
+                props.query.length === 0 ? null :
+                <button className="p-2 text-gray-600"
+                        title="Clear search"
+                        onClick={() => props.onQueryChange("")}>
+                    <XIcon/>
+                </button>
+            }
+        </div>
+        {
+            query.length === 0 ? null :
+            <div className="pinion-search-results w-full overflow-auto border-2 border-gray-100 rounded mt-1">
+                {
+                    props.results.length === 0 ?
+                    <div className="p-2 text-sm text-gray-600">No pins found</div> :
+                    props.results.map((pin, i) =>
+                        <button key={i}
+                                className="w-full p-2 text-left border-b-2 border-gray-100"
+                                onMouseEnter={() => props.onHover(pin)}
+                                onMouseLeave={() => props.onLeave(pin)}
+                                onClick={() => props.onSelect(pin)}>
+                            <div className="font-semibold">{pin.name}</div>
+                            <div className="text-xs text-gray-600">{pin.groups.join(", ")}</div>
+                        </button>
+                    )
+                }
+            </div>
+        }
+    </div>
 }
 
 function ComponentDescription(props) {
@@ -434,6 +509,7 @@ export function PinionWidget(props) {
     const [pinnedComponent, setPinnedComponent] = useState(null);
     const [frontActive, setFrontActive] = useState(true);
     const [maximized, setMaximized] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const { ref: observe, width } = useResizeObserver();
 
     useEffect(() => {
@@ -508,6 +584,10 @@ export function PinionWidget(props) {
 
     let allPins = spec.components.flatMap(x => x.pins).filter(x => isItemVisible(x));
     let allComponents = spec.components.filter(x => x.highlight).filter(x => isItemVisible(x));
+    let normalizedSearchQuery = searchQuery.trim().toLowerCase();
+    let searchResults = normalizedSearchQuery.length === 0
+        ? []
+        : allPins.filter(pin => normalizedSearchText(pin, allPins).includes(normalizedSearchQuery));
 
     let highlightedPins = allPins
         .filter(pin => pin.groups.some(group => visibleGroups[group]));
@@ -595,6 +675,12 @@ export function PinionWidget(props) {
                                                     transform={sideTransform}
                                                     color="#FCD34D"/>
                                     ),
+                                    searchResults.map((pin, i) =>
+                                        <PinHighlight key={`ps${i}`}
+                                                    pin={pin}
+                                                    transform={sideTransform}
+                                                    color="#FFA200"/>
+                                    ),
                                     activePins.map((pin, i) =>
                                         <PinHighlight key={`pa${i}`}
                                                     pin={pin}
@@ -641,6 +727,13 @@ export function PinionWidget(props) {
                             </button>
                         </div>
                     }
+                    <PinSearch
+                        query={searchQuery}
+                        results={searchResults}
+                        onQueryChange={setSearchQuery}
+                        onHover={setActivePin}
+                        onLeave={handlePinLeave}
+                        onSelect={handlePinClick}/>
                     <div className="w-full flex mb-4">
                         {
                             pinnedPins.size === 0 && pinnedComponent === null ? <></> :

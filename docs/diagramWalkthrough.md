@@ -129,6 +129,10 @@ Pinion widget and a simple page that includes the widget. Then simply invoke
 `pinion serve -b --directory <diagram directory>` to preview the diagram in your
 browser.
 
+The widget includes pin search. Use the search box to find pins by name,
+description, or group; matching pins are highlighted on the current board side,
+and selecting a result pins it in the diagram.
+
 If you need a diagram that works directly from the local filesystem without a
 web server, pass `--embed` to `pinion generate`. This creates a standalone
 `index.html` file with the widget, styles, specification, and board images

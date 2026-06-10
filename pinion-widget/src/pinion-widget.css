@@ -20,6 +20,10 @@ input[type=checkbox] {width:18px; height:18px;}
     height: 18rem;
 }
 
+.pinion-search-results {
+    max-height: 12rem;
+}
+
 .right {
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);
