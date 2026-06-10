@@ -1,6 +1,7 @@
 from pathlib import Path
 import pcbnew
 import json
+import base64
 
 from typing import Tuple, Callable, Dict, Optional
 
@@ -247,6 +248,63 @@ def packPinion(outputdir):
     with open(outputdir / "template.html", "w") as f:
         get("template", f)
 
+def embedResource(filename: Path, mimeType: str) -> str:
+    with open(filename, "rb") as f:
+        payload = base64.b64encode(f.read()).decode("ascii")
+    return f"data:{mimeType};base64,{payload}"
+
+def scriptText(text: str) -> str:
+    return text.replace("</", "<\\/")
+
+def embeddedSpecification(outputdir: Path, specification: any):
+    embedded = json.loads(json.dumps(specification))
+    embedded["front"]["file"] = embedResource(outputdir / embedded["front"]["file"], "image/png")
+    embedded["back"]["file"] = embedResource(outputdir / embedded["back"]["file"], "image/png")
+    return embedded
+
+def embedPinion(outputdir: Path, specification: any):
+    from pinion.get import get
+    import io
+
+    js = io.StringIO()
+    css = io.StringIO()
+    get("js", js)
+    get("css", css)
+
+    spec = scriptText(json.dumps(embeddedSpecification(outputdir, specification)))
+    js = scriptText(js.getvalue())
+    css = css.getvalue()
+
+    with open(outputdir / "index.html", "w") as f:
+        f.write(f"""<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+{css}
+    </style>
+    <title>Pinion diagram</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div style="max-width: 1400px; margin: 0 auto;">
+      <div id="root"></div>
+    </div>
+
+    <script>
+{js}
+    </script>
+    <script type="application/json" id="pinion-spec">{spec}</script>
+    <script>
+        pinion.setup(document.getElementById("root"), {{
+            source: "",
+            specification: JSON.parse(document.getElementById("pinion-spec").textContent)
+        }});
+    </script>
+  </body>
+</html>
+""")
+
 ImageGenerator = Callable[[pcbnew.BOARD, Path], Tuple[Dict[str, Tuple[int, int]]]]
 
 def generateDrawnImages(board: pcbnew.BOARD, outputdir: Path, dpi: int, pcbdrawArgs: any) \
@@ -306,6 +364,7 @@ def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
 
 
 def generate(board: pcbnew.BOARD, specification: any, outputdir, pack: bool,
+             embed: bool,
              imageGenerator: ImageGenerator):
     """
     Generate board pinout diagram
@@ -336,3 +395,5 @@ def generate(board: pcbnew.BOARD, specification: any, outputdir, pack: bool,
 
     if pack:
         packPinion(outputdir)
+    if embed:
+        embedPinion(outputdir, specification)

@@ -125,6 +125,13 @@ Pinion widget and a simple page that includes the widget. Then simply invoke
 `pinion serve -b --directory <diagram directory>` to preview the diagram in your
 browser.
 
+If you need a diagram that works directly from the local filesystem without a
+web server, pass `--embed` to `pinion generate`. This creates a standalone
+`index.html` file with the widget, styles, specification, and board images
+embedded. This mode is convenient for sharing a single file, but the regular
+multi-file output is usually better for websites as browsers can cache the
+files separately.
+
 ## Including the pinion widget on your webpage
 
 Including pinion on a web page is simple. Just include the `pinion-widget`
@@ -153,8 +160,12 @@ on your setup.
 
 In the third block, we start the widget. The first argument of `pinion.setup` is
 the container for the widget and the second argument is a dictionary that
-configures the widget. Currently, the only option is `source` that has to
-contain a location to the source directory (note that it can also be an absolute
-path).
+configures the widget. Currently, the only option is `source` that has to point
+to the output directory created by `pinion generate`. This is not the KiCAD
+project directory; it is the generated diagram directory that contains the
+files Pinion widget loads. The path can be relative to the web page or absolute.
+
+GitHub does not run JavaScript embedded directly in README files, but the same
+HTML and JavaScript works from GitHub Pages or another static website.
 
 And this is it. When you load your page, the diagram should be running!

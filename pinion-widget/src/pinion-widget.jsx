@@ -47,6 +47,16 @@ async function fetchJson(path) {
     return await response.json();
 }
 
+function resolveSourcePath(source, path) {
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(path)) {
+        return path;
+    }
+    if (!source) {
+        return path;
+    }
+    return source.replace(/\/$/, "") + "/" + path;
+}
+
 function bboxToPoly(bbox) {
     return [
         bbox.tl,
@@ -539,7 +549,7 @@ export function PinionWidget(props) {
                     style={pcbStyle}
                     onClick={handleMisClick}>
                     <PcbMap className="mx-auto max-h-full py-4"
-                            src={props.source + "/" + side.file}
+                            src={resolveSourcePath(props.source, side.file)}
                             area={side.area}
                             transform={sideTransform}
                             htmlAnnotations={
