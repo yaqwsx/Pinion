@@ -297,10 +297,11 @@ def embedPinion(outputdir: Path, specification: any):
     </script>
     <script type="application/json" id="pinion-spec">{spec}</script>
     <script>
-        pinion.setup(document.getElementById("root"), {{
+        const pinionWidget = pinion.setup(document.getElementById("root"), {{
             source: "",
             specification: JSON.parse(document.getElementById("pinion-spec").textContent)
         }});
+        pinion.setupHashHandler(pinionWidget);
     </script>
   </body>
 </html>

@@ -499,6 +499,71 @@ function chooseColor(palette, assignedColors) {
     return _.find(palette, c => occurences[c] === least);
 }
 
+function slugify(value) {
+    return value.toString()
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
+function groupTreeNames(groups) {
+    let names = [];
+    let visit = group => {
+        Object.entries(group || {}).forEach(([name, children]) => {
+            names.push(name);
+            visit(children);
+        });
+    };
+    visit(groups);
+    return names;
+}
+
+function itemGroupNames(spec) {
+    if (!spec)
+        return [];
+    return spec.components.flatMap(component =>
+        [
+            ...(component.groups || []),
+            ...component.pins.flatMap(pin => pin.groups || [])
+        ]);
+}
+
+function findGroupName(spec, group) {
+    let requested = group.toString();
+    let names = _.uniq([...groupTreeNames(spec.groups), ...itemGroupNames(spec)]);
+
+    if (names.includes(requested))
+        return requested;
+
+    let lowerRequested = requested.toLowerCase();
+    let lowerMatches = names.filter(name => name.toLowerCase() === lowerRequested);
+    if (lowerMatches.length === 1)
+        return lowerMatches[0];
+
+    let requestedSlug = slugify(requested);
+    let slugMatches = names.filter(name => slugify(name) === requestedSlug);
+    if (slugMatches.length === 1)
+        return slugMatches[0];
+
+    return null;
+}
+
+function collectGroupSubtree(groups, target) {
+    let visit = group => {
+        for (let [name, children] of Object.entries(group || {})) {
+            if (name === target)
+                return [name, ...groupTreeNames(children)];
+            let childMatch = visit(children);
+            if (childMatch)
+                return childMatch;
+        }
+        return null;
+    };
+    return visit(groups);
+}
+
 export function PinionWidget(props) {
     const [spec, setSpec] = useState(null);
     const [error, setError] = useState(null);
@@ -525,6 +590,65 @@ export function PinionWidget(props) {
                 });
         }
     }, [props.source, props.specification]);
+
+    let applyGroupVisibility = (groups, state, options = {}) => {
+        if (!spec)
+            return false;
+
+        let requestedGroups = Array.isArray(groups) ? groups : [groups];
+        let resolvedGroups = requestedGroups
+            .map(group => findGroupName(spec, group))
+            .filter(group => group !== null);
+
+        if (resolvedGroups.length === 0)
+            return false;
+
+        let expandedGroups = options.includeChildren === false
+            ? resolvedGroups
+            : resolvedGroups.flatMap(group => collectGroupSubtree(spec.groups, group) || [group]);
+
+        let change = {};
+        _.uniq(expandedGroups).forEach(group => {
+            change[group] = state;
+        });
+
+        setVisibleGroups(previous => ({
+            ...(options.replace ? {} : previous),
+            ...change
+        }));
+        return true;
+    };
+
+    let setSide = side => {
+        if (!spec || !["front", "back"].includes(side) || !spec[side])
+            return false;
+        setFrontActive(side === "front");
+        return true;
+    };
+
+    useEffect(() => {
+        if (!props.onApi)
+            return;
+
+        if (!spec) {
+            props.onApi(null);
+            return;
+        }
+
+        props.onApi({
+            highlightGroup: (group, options = {}) =>
+                applyGroupVisibility(group, true, {replace: true, ...options}),
+            setGroupVisibility: (groups, visible = true, options = {}) =>
+                applyGroupVisibility(groups, visible, options),
+            clearHighlights: () => {
+                setVisibleGroups({});
+                return true;
+            },
+            setSide
+        });
+
+        return () => props.onApi(null);
+    });
 
     if (error)
         return <div className="errorMessage">{error}</div>;
@@ -560,13 +684,7 @@ export function PinionWidget(props) {
     }
 
     let handleGroupVisibility = (groups, state) => {
-        let change = {};
-        groups.forEach(element => {
-            change[element] = state;
-        });
-        setVisibleGroups({
-            ...visibleGroups,
-            ...change});
+        applyGroupVisibility(groups, state);
     }
 
     let palette = ["#FFA200", "#8ac926", "#1982c4", "#3644FF", "#FF80F2"];

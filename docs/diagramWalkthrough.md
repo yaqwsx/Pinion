@@ -138,7 +138,11 @@ web server, pass `--embed` to `pinion generate`. This creates a standalone
 `index.html` file with the widget, styles, specification, and board images
 embedded. This mode is convenient for sharing a single file, but the regular
 multi-file output is usually better for websites as browsers can cache the
-files separately.
+files separately. Standalone embedded diagrams also support direct highlight
+links. Append `#group=Group name` or just `#group-name` to the generated
+`index.html` URL to open the diagram with the matching group highlighted. You
+can also select a board side with `#group=Group name&side=front` or
+`#group=Group name&side=back`.
 
 ## Including the pinion widget on your webpage
 
@@ -152,7 +156,7 @@ script, stylesheets and set it up:
 <link rel="stylesheet" href="resources/pinion.css">
 
 <script>
-    pinion.setup(document.getElementById("pinionDemo"), {
+    const pinionWidget = pinion.setup(document.getElementById("pinionDemo"), {
         source: "resources/alksDemo"
     });
 </script>
@@ -172,6 +176,21 @@ configures the widget. Currently, the only option is `source` that has to point
 to the output directory created by `pinion generate`. This is not the KiCAD
 project directory; it is the generated diagram directory that contains the
 files Pinion widget loads. The path can be relative to the web page or absolute.
+
+`pinion.setup` returns a controller object for programmatic control:
+
+```js
+pinionWidget.highlightGroup("I2C");
+pinionWidget.setGroupVisibility(["I2C", "SPI"], true);
+pinionWidget.clearHighlights();
+pinionWidget.setSide("front");
+```
+
+`highlightGroup` replaces the current highlighted groups and includes nested
+groups. Group matching first tries the exact group name, then a
+case-insensitive match, then a URL-friendly slug such as `power-leds` for
+`Power LEDs`. If your page has a single Pinion widget and you want it to react
+to `location.hash`, call `pinion.setupHashHandler(pinionWidget)`.
 
 GitHub does not run JavaScript embedded directly in README files, but the same
 HTML and JavaScript works from GitHub Pages or another static website.
