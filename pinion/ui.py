@@ -42,12 +42,86 @@ def selectedSides(side):
     return (side,)
 
 
+def cwdProjectName(cwd=Path(".")):
+    return Path(cwd).resolve().name
+
+
+def selectDefaultPath(preferred, candidates, kind, option):
+    if preferred.exists():
+        return preferred
+
+    candidates = sorted(candidates)
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) == 0:
+        raise click.ClickException(
+            f"Cannot infer {kind}; pass {option} explicitly.")
+    raise click.ClickException(
+        f"Cannot infer {kind}; multiple candidates found: "
+        f"{', '.join(str(x) for x in candidates)}. Pass {option} explicitly.")
+
+
+def defaultBoardPath(cwd=Path(".")):
+    cwd = Path(cwd)
+    preferred = cwd / f"{cwdProjectName(cwd)}.kicad_pcb"
+    return selectDefaultPath(
+        preferred,
+        cwd.glob("*.kicad_pcb"),
+        "board file",
+        "--board")
+
+
+def defaultSpecificationPath(cwd=Path(".")):
+    cwd = Path(cwd)
+    projectName = cwdProjectName(cwd)
+    preferredYaml = cwd / f"{projectName}_pinion.yaml"
+    if preferredYaml.exists():
+        return preferredYaml
+
+    preferredYml = cwd / f"{projectName}_pinion.yml"
+    return selectDefaultPath(
+        preferredYml,
+        list(cwd.glob("*_pinion.yaml")) + list(cwd.glob("*_pinion.yml")),
+        "specification file",
+        "--specification")
+
+
+def defaultTemplateOutputPath(cwd=Path(".")):
+    cwd = Path(cwd)
+    return cwd / f"{cwdProjectName(cwd)}_pinion.yaml"
+
+
+def resolveBoard(ctx, param, value):
+    if value is not None:
+        return value
+    return str(defaultBoardPath())
+
+
+def resolveSpecification(ctx, param, value):
+    if value is not None:
+        return value
+    return str(defaultSpecificationPath())
+
+
+def resolveTemplateOutput(output):
+    if output is not None:
+        return output
+
+    output = defaultTemplateOutputPath()
+    if output.exists():
+        raise click.ClickException(
+            f"Refusing to overwrite inferred template output {output}. "
+            "Pass --output explicitly to overwrite it.")
+    return str(output)
+
+
 @click.command("template")
 @click.option("-b", "--board",
-    type=click.Path(file_okay=True, dir_okay=False, exists=True), required=True,
-    help="Source KiCAD board (*.kicad_pcb)")
-@click.option("-o", "--output", type=click.File("w"), required=True,
-    help="Filepath or stdout (when '-' specified) for the resulting template")
+    type=click.Path(file_okay=True, dir_okay=False, exists=True),
+    callback=resolveBoard,
+    help="Source KiCAD board (*.kicad_pcb). Defaults to the project-named board or the only board in the current directory.")
+@click.option("-o", "--output", type=click.Path(dir_okay=False), default=None,
+    help="Filepath or stdout (when '-' specified) for the resulting template. Defaults to <project>_pinion.yaml.")
 @click.option("-c", "--components", type=str, default=None, multiple=True,
     help="Include only components mathing regex in the template")
 def template(board, output, components):
@@ -59,17 +133,22 @@ def template(board, output, components):
     from pinion.template import generateTemplate
     import pcbnew
 
+    outputPath = resolveTemplateOutput(output)
     pcb = pcbnew.LoadBoard(board)
-    generateTemplate(pcb, output, components)
+    with click.open_file(outputPath, "w") as outputFile:
+        generateTemplate(pcb, outputFile, components)
 
 
 def generateCommandArgs(func):
     @click.argument("outputdir", type=click.Path(file_okay=False, dir_okay=True))
     @click.option("-b", "--board",
-    type=click.Path(file_okay=True, dir_okay=False, exists=True), required=True,
-    help="Source KiCAD board (*.kicad_pcb)")
-    @click.option("-s", "--specification", type=click.File("r"), required=True,
-    help="YAML specification of the pinout")
+    type=click.Path(file_okay=True, dir_okay=False, exists=True),
+    callback=resolveBoard,
+    help="Source KiCAD board (*.kicad_pcb). Defaults to the project-named board or the only board in the current directory.")
+    @click.option("-s", "--specification",
+    type=click.Path(file_okay=True, dir_okay=False, exists=True),
+    callback=resolveSpecification,
+    help="YAML specification of the pinout. Defaults to <project>_pinion.yaml or the only *_pinion YAML file.")
     @click.option("--pack/--no-pack", default=True,
     help="Pack pinion-widget with the source")
     @click.option("--embed/--no-embed", default=False,
@@ -112,13 +191,14 @@ def generatePlotted(board, specification, outputdir, dpi, pack, embed, side, sty
                  "filter": filter
              }, sides)
 
-    generate(specification=yaml.load(specification),
-             board=pcbnew.LoadBoard(board),
-             outputdir=outputdir,
-             pack=pack,
-             embed=embed,
-             sides=selectedSides(side),
-             imageGenerator=generateImages)
+    with click.open_file(specification, "r") as specificationFile:
+        generate(specification=yaml.load(specificationFile),
+                 board=pcbnew.LoadBoard(board),
+                 outputdir=outputdir,
+                 pack=pack,
+                 embed=embed,
+                 sides=selectedSides(side),
+                 imageGenerator=generateImages)
 
 @click.command("rendered")
 @generateCommandArgs
@@ -149,13 +229,14 @@ def generateRendered(board, specification, pack, outputdir, renderer,
             baseResolution=(3000, 3000),
             sides=sides)
 
-    generate(specification=yaml.load(specification),
-             board=pcbnew.LoadBoard(board),
-             outputdir=outputdir,
-             pack=pack,
-             embed=embed,
-             sides=selectedSides(side),
-             imageGenerator=generateImages)
+    with click.open_file(specification, "r") as specificationFile:
+        generate(specification=yaml.load(specificationFile),
+                 board=pcbnew.LoadBoard(board),
+                 outputdir=outputdir,
+                 pack=pack,
+                 embed=embed,
+                 sides=selectedSides(side),
+                 imageGenerator=generateImages)
 
 
 @click.group()

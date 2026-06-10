@@ -65,6 +65,11 @@ pinion template \
 
 Then you can modify the template as you need.
 
+If the board file can be inferred from the current directory, `pinion template`
+can be run without `--board`. When `--output` is omitted, it writes to
+`<project>_pinion.yaml`. Pinion refuses to overwrite that inferred output path;
+pass `--output` explicitly if you want to replace an existing file.
+
 ## Building the diagram
 
 To build the diagram, simply invoke:
@@ -87,6 +92,21 @@ This will generate all files required. Note that the board image is generated
 via [PcbDraw](https://github.com/yaqwsx/PcbDraw). Therefore, if you struggle to
 generate the board image correctly, try using PcbDraw directly first to locate
 the issue.
+
+When you run Pinion from a KiCad project directory, Pinion can infer the input
+file names. It first looks for a board named after the current directory, such
+as `MyBoard.kicad_pcb` in a directory named `MyBoard`. If that file does not
+exist, Pinion uses the only `*.kicad_pcb` file in the current directory. If
+there are multiple board files, pass `--board` explicitly. Similarly, the
+specification defaults to `MyBoard_pinion.yaml` or `MyBoard_pinion.yml`, or to
+the only `*_pinion.yaml`/`*_pinion.yml` file in the current directory.
+
+With those names, the commands can be shortened to:
+
+```
+pinion generate plotted <path to output directory>
+pinion generate rendered <path to output directory>
+```
 
 Note that you can also specify the option `--pack` that will include
 `pinion-widget` and a simple, stand-alone page with the diagram. You should
