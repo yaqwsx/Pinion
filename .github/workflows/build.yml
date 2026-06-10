@@ -1,6 +1,10 @@
 name: Build
 on:
   push:
+  schedule:
+    # Refresh artifacts before the 14-day retention window expires.
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
 jobs:
   build:
     name: "Build pinion documentation"
