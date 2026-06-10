@@ -258,8 +258,9 @@ def scriptText(text: str) -> str:
 
 def embeddedSpecification(outputdir: Path, specification: any):
     embedded = json.loads(json.dumps(specification))
-    embedded["front"]["file"] = embedResource(outputdir / embedded["front"]["file"], "image/png")
-    embedded["back"]["file"] = embedResource(outputdir / embedded["back"]["file"], "image/png")
+    for side in ["front", "back"]:
+        if side in embedded:
+            embedded[side]["file"] = embedResource(outputdir / embedded[side]["file"], "image/png")
     return embedded
 
 def embedPinion(outputdir: Path, specification: any):
@@ -305,15 +306,18 @@ def embedPinion(outputdir: Path, specification: any):
 </html>
 """)
 
-ImageGenerator = Callable[[pcbnew.BOARD, Path], Tuple[Dict[str, Tuple[int, int]]]]
+ImageGenerator = Callable[[pcbnew.BOARD, Path, Tuple[str, ...]], Dict[str, Dict[str, Tuple[int, int]]]]
 
-def generateDrawnImages(board: pcbnew.BOARD, outputdir: Path, dpi: int, pcbdrawArgs: any) \
-        -> Tuple[Dict[str, Tuple[int, int]]]:
-    fSource = generateImage(board.GetFileName(), outputdir / "front.png",
-        dpi, pcbdrawArgs, False)
-    bSource = generateImage(board.GetFileName(), outputdir / "back.png",
-        dpi, pcbdrawArgs, True)
-    return fSource, bSource
+def generateDrawnImages(board: pcbnew.BOARD, outputdir: Path, dpi: int, pcbdrawArgs: any,
+                        sides: Tuple[str, ...]) -> Dict[str, Dict[str, Tuple[int, int]]]:
+    result = {}
+    if "front" in sides:
+        result["front"] = generateImage(board.GetFileName(), outputdir / "front.png",
+            dpi, pcbdrawArgs, False)
+    if "back" in sides:
+        result["back"] = generateImage(board.GetFileName(), outputdir / "back.png",
+            dpi, pcbdrawArgs, True)
+    return result
 
 def boardAreaRect(board: pcbnew.BOARD):
     """
@@ -327,44 +331,46 @@ def boardAreaRect(board: pcbnew.BOARD):
 
 def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
                      orthographic: bool, raytraced: bool, componets: bool,
-                     baseResolution: Tuple[int, int]):
+                     baseResolution: Tuple[int, int], sides: Tuple[str, ...]):
     from pcbdraw.renderer import RenderAction, renderBoard, Side
 
-    frontImage = renderBoard(board.GetFileName(), RenderAction(
-        side=Side.FRONT,
-        components=componets,
-        raytraced=raytraced,
-        orthographic=orthographic,
-        transparent=True,
-        width=baseResolution[0],
-        height=baseResolution[1],
-        padding=0,
-    ))
-    frontImage.save(outputdir / "front.png")
+    result = {}
+    if "front" in sides:
+        frontImage = renderBoard(board.GetFileName(), RenderAction(
+            side=Side.FRONT,
+            components=componets,
+            raytraced=raytraced,
+            orthographic=orthographic,
+            transparent=True,
+            width=baseResolution[0],
+            height=baseResolution[1],
+            padding=0,
+        ))
+        frontImage.save(outputdir / "front.png")
+        result["front"] = boardAreaRect(board)
 
-    backImage = renderBoard(board.GetFileName(), RenderAction(
-        side=Side.BACK,
-        components=componets,
-        raytraced=raytraced,
-        orthographic=orthographic,
-        transparent=True,
-        width=baseResolution[0],
-        height=baseResolution[1],
-        padding=0,
-    ))
-    backImage.save(outputdir / "back.png")
-
-    fAreaRect = boardAreaRect(board)
-    bArea = boardAreaRect(board)
-    bAreaRect = {
-        "tl": (-(bArea["br"][0]), bArea["tl"][1]),
-        "br": (-(bArea["tl"][0]), bArea["br"][1])
-    }
-    return fAreaRect, bAreaRect
+    if "back" in sides:
+        backImage = renderBoard(board.GetFileName(), RenderAction(
+            side=Side.BACK,
+            components=componets,
+            raytraced=raytraced,
+            orthographic=orthographic,
+            transparent=True,
+            width=baseResolution[0],
+            height=baseResolution[1],
+            padding=0,
+        ))
+        backImage.save(outputdir / "back.png")
+        bArea = boardAreaRect(board)
+        result["back"] = {
+            "tl": (-(bArea["br"][0]), bArea["tl"][1]),
+            "br": (-(bArea["tl"][0]), bArea["br"][1])
+        }
+    return result
 
 
 def generate(board: pcbnew.BOARD, specification: any, outputdir, pack: bool,
-             embed: bool,
+             embed: bool, sides: Tuple[str, ...],
              imageGenerator: ImageGenerator):
     """
     Generate board pinout diagram
@@ -372,23 +378,25 @@ def generate(board: pcbnew.BOARD, specification: any, outputdir, pack: bool,
     outputdir = Path(outputdir)
     outputdir.mkdir(parents=True, exist_ok=True)
 
-    fSource, bSource = imageGenerator(board, outputdir)
+    imageSources = imageGenerator(board, outputdir, sides)
 
     specification = {
         "pinionVersion": __version__,
         "name": specification["name"],
         "description": specification["description"],
-        "front": {
-            "file": "front.png",
-            "area": fSource
-        },
-        "back": {
-            "file": "back.png",
-            "area": bSource
-        },
         "components": componentsDefinition(specification["components"], board),
         "groups": groupStructure(specification.get("groups", None), specification["components"])
     }
+    if "front" in imageSources:
+        specification["front"] = {
+            "file": "front.png",
+            "area": imageSources["front"]
+        }
+    if "back" in imageSources:
+        specification["back"] = {
+            "file": "back.png",
+            "area": imageSources["back"]
+        }
 
     with open(outputdir / "spec.json", "w") as f:
         f.write(json.dumps(specification, indent=4))

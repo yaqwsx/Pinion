@@ -92,6 +92,10 @@ Note that you can also specify the option `--pack` that will include
 `pinion-widget` and a simple, stand-alone page with the diagram. You should
 upload the entire directory on your web page.
 
+By default, Pinion generates both board sides. If you only need one side, pass
+`--side front` or `--side back` to `pinion generate`. Single-side diagrams hide
+the front/back side switch in the widget.
+
 ## Options for stylized diagrams
 
 You can pass PcbDraw options to `pinion generate` to e.g., remap your

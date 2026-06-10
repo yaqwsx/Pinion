@@ -495,12 +495,16 @@ export function PinionWidget(props) {
 
     let palette = ["#FFA200", "#8ac926", "#1982c4", "#3644FF", "#FF80F2"];
 
-    let side = frontActive ? spec.front : spec.back;
-    let sideTransform = frontActive
+    let availableSides = ["front", "back"].filter(side => spec[side]);
+    let selectedSide = frontActive && spec.front ? "front"
+        : !frontActive && spec.back ? "back"
+        : availableSides[0];
+    let side = spec[selectedSide];
+    let sideTransform = selectedSide === "front"
         ? x => x
         : x => [-x[0], x[1]];
 
-    let isItemVisible = item => (frontActive && item.front) || (!frontActive && item.back);
+    let isItemVisible = item => item[selectedSide];
 
     let allPins = spec.components.flatMap(x => x.pins).filter(x => isItemVisible(x));
     let allComponents = spec.components.filter(x => x.highlight).filter(x => isItemVisible(x));
@@ -624,16 +628,19 @@ export function PinionWidget(props) {
                             onClick={() => setMaximized(!maximized)}>
                         { maximized ? "Minimize" : "Maximize" }
                     </button>
-                    <div className="w-full flex mb-4">
-                        <button className={"flex-1 mr-1 rounded p-3 shadow " + (frontActive ? "bg-blue-400" : "bg-blue-200")}
-                                onClick={() => setFrontActive(true)}>
-                            Front side
-                        </button>
-                        <button className={"flex-1 mr-1 rounded p-3 shadow " + (!frontActive ? "bg-blue-400" : "bg-blue-200")}
-                                onClick={() => setFrontActive(false)}>
-                            Back side
-                        </button>
-                    </div>
+                    {
+                        availableSides.length > 1 &&
+                        <div className="w-full flex mb-4">
+                            <button className={"flex-1 mr-1 rounded p-3 shadow " + (frontActive ? "bg-blue-400" : "bg-blue-200")}
+                                    onClick={() => setFrontActive(true)}>
+                                Front side
+                            </button>
+                            <button className={"flex-1 mr-1 rounded p-3 shadow " + (!frontActive ? "bg-blue-400" : "bg-blue-200")}
+                                    onClick={() => setFrontActive(false)}>
+                                Back side
+                            </button>
+                        </div>
+                    }
                     <div className="w-full flex mb-4">
                         {
                             pinnedPins.size === 0 && pinnedComponent === null ? <></> :

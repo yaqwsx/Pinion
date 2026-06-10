@@ -36,6 +36,12 @@ class CliList(click.ParamType):
         return list(splitStr(self.separator, self.escape, value))
 
 
+def selectedSides(side):
+    if side == "both":
+        return ("front", "back")
+    return (side,)
+
+
 @click.command("template")
 @click.option("-b", "--board",
     type=click.Path(file_okay=True, dir_okay=False, exists=True), required=True,
@@ -68,6 +74,8 @@ def generateCommandArgs(func):
     help="Pack pinion-widget with the source")
     @click.option("--embed/--no-embed", default=False,
     help="Generate a standalone index.html with all resources embedded")
+    @click.option("--side", type=click.Choice(["front", "back", "both"]), default="both",
+    help="Which board side to include in the diagram")
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -84,7 +92,7 @@ def generateCommandArgs(func):
     help="PcbDraw library specification")
 @click.option("--remap", help="PcbDraw footprint remapping specification")
 @click.option("--filter", help="PcbDraw filter specification")
-def generatePlotted(board, specification, outputdir, dpi, pack, embed, style, libs, remap, filter):
+def generatePlotted(board, specification, outputdir, dpi, pack, embed, side, style, libs, remap, filter):
     """
     Generate a pinout diagram with stylized image of the board
     """
@@ -96,19 +104,20 @@ def generatePlotted(board, specification, outputdir, dpi, pack, embed, style, li
 
     yaml=YAML(typ='safe')
 
-    def generateImages(board: pcbnew.BOARD, outputdir: Path) -> Tuple[Dict[str, Tuple[int, int]]]:
+    def generateImages(board: pcbnew.BOARD, outputdir: Path, sides) -> Dict[str, Dict[str, Tuple[int, int]]]:
         return generateDrawnImages(board, outputdir, dpi, {
                  "style": style,
                  "libs": libs,
                  "remap": remap,
                  "filter": filter
-             })
+             }, sides)
 
     generate(specification=yaml.load(specification),
              board=pcbnew.LoadBoard(board),
              outputdir=outputdir,
              pack=pack,
              embed=embed,
+             sides=selectedSides(side),
              imageGenerator=generateImages)
 
 @click.command("rendered")
@@ -120,7 +129,7 @@ def generatePlotted(board, specification, outputdir, dpi, pack, embed, style, li
 @click.option("--no-components", is_flag=True, default=False,
     help="Disable component rendering")
 def generateRendered(board, specification, pack, outputdir, renderer,
-                     embed, projection, no_components):
+                     embed, side, projection, no_components):
     """
     Generate a pinout diagram with 3D rendered image of the board
     """
@@ -132,18 +141,20 @@ def generateRendered(board, specification, pack, outputdir, renderer,
 
     yaml=YAML(typ='safe')
 
-    def generateImages(board: pcbnew.BOARD, outputdir: Path) -> Tuple[Dict[str, Tuple[int, int]]]:
+    def generateImages(board: pcbnew.BOARD, outputdir: Path, sides) -> Dict[str, Dict[str, Tuple[int, int]]]:
         return generateRenderedImages(board, outputdir,
             componets=(not no_components),
             orthographic=(projection == "orthographic"),
             raytraced=(renderer == "raytrace"),
-            baseResolution=(3000, 3000))
+            baseResolution=(3000, 3000),
+            sides=sides)
 
     generate(specification=yaml.load(specification),
              board=pcbnew.LoadBoard(board),
              outputdir=outputdir,
              pack=pack,
              embed=embed,
+             sides=selectedSides(side),
              imageGenerator=generateImages)
 
 
