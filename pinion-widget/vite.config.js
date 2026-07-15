@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { scopePinionCssPlugin } from './tools/scope-css.js';
 
 export default defineConfig({
   define: {
@@ -12,6 +13,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    scopePinionCssPlugin(),
   ],
   build: {
     lib: {

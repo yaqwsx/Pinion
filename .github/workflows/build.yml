@@ -34,7 +34,8 @@ jobs:
           python3 -m pip install --break-system-packages --force git+https://github.com/yaqwsx/PcbDraw@master
           cd pinion-widget
 
-          npm install
+          npm ci
+          npm test
           cd ..
       -  name: Build pinion package
          run: |

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "pretest": "npm run build",
+    "test": "node --test test/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -17,6 +19,8 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "@vitejs/plugin-react": "^4.0.0",
+    "postcss": "^8.5.3",
+    "postcss-selector-parser": "^7.1.0",
     "tailwindcss": "^4.0.0",
     "vite": "^6.0.0"
   }

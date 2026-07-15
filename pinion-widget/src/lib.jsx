@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { PinionWidget } from './pinion-widget';
 
 const roots = new WeakMap();
+const rootAttribute = 'data-pinion-root';
 
 function createController() {
     let api = null;
@@ -38,6 +39,7 @@ function createController() {
 }
 
 export const setup = (element, config) => {
+    element.setAttribute(rootAttribute, '');
     let mount = roots.get(element);
     if (!mount) {
         mount = {
@@ -56,6 +58,7 @@ export const teardown = (element) => {
         mount.root.unmount();
         roots.delete(element);
     }
+    element.removeAttribute(rootAttribute);
 };
 
 export const applyHash = (controller, hash = window.location.hash) => {
