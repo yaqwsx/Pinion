@@ -2,7 +2,7 @@
 
 ## Pinion says `kicad-cli not found`
 
-This message means that Pinion cannot locate KiCAD 9 or newer's command-line
+This message means that Pinion cannot locate KiCAD 9 or 10's command-line
 tool. Add `kicad-cli` to your `PATH`, or set `KICAD_CLI` to its executable path.
 See [installation](installation.md).
 
