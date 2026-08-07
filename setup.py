@@ -26,7 +26,7 @@ setuptools.setup(
     install_requires=[
         "click>=7.1",
         "ruamel.yaml",
-        "pcbdraw>=1.2",
+        "pcbdraw>=1.4",
     ],
     setup_requires=[
         "versioneer"

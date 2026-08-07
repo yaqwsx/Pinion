@@ -8,14 +8,15 @@ yaml.default_flow_style=False
 yaml.width=80
 yaml.indent=4
 
-def collectPins(footprint):
+def collectPins(scene, footprint):
     pins = CommentedMap()
-    for i, pad in enumerate(footprint.Pads()):
+    for i, name in enumerate(footprint.pads):
+        pad = scene.pads[(footprint.reference, name)]
         p = CommentedMap()
-        p.insert(0, "name", pad.GetNetname())
+        p.insert(0, "name", pad.net or "")
         p.insert(1, "description", "")
         p.insert(2, "groups", [])
-        pins.insert(i, pad.GetName(), p)
+        pins.insert(i, name, p)
     return pins
 
 def collectComponents(board, components=None):
@@ -24,17 +25,18 @@ def collectComponents(board, components=None):
     components if specified
     """
     d = CommentedMap()
-    footprints = [f for f in board.GetFootprints()
-        if components is None or len(components) == 0 or any([re.match(c, f.GetReference()) for c in components])]
-    footprints.sort(key=lambda f: f.GetReference())
+    footprints = [f for f in board.components.values()
+        if components is None or len(components) == 0 or any([re.match(c, f.reference) for c in components])]
+    footprints.sort(key=lambda f: f.reference)
     for i, f in enumerate(footprints):
         description = CommentedMap()
-        description.insert(0, "description", f.GetValue(), "Arbitrary comment")
+        description.insert(0, "description", f.value, "Arbitrary comment")
         description.insert(1, "groups", [], "Specify component groups")
-        description.insert(2, "pins", collectPins(f))
+        description.insert(2, "pins", collectPins(board, f))
         description.insert(3, "highlight", False, "Make the component active")
-        description.insert(4, "highlightBoth", f.HasThroughHolePads())
-        d.insert(i, f.GetReference(), description)
+        description.insert(4, "highlightBoth", any(
+            board.pads[(f.reference, name)].through_hole for name in f.pads))
+        d.insert(i, f.reference, description)
     return d
 
 def generateTemplate(board, output, components):
@@ -43,11 +45,10 @@ def generateTemplate(board, output, components):
     components and all pins.
     """
     d = CommentedMap()
-    name = os.path.basename(board.GetFileName())
+    name = os.path.basename(board.source_path)
     name = os.path.splitext(name)[0]
     d.insert(0, "name", name, "Put the name of diagram here")
     d.insert(1, "description", "Example diagram", "Put a short description of the diagram here")
     d.insert(2, "components", collectComponents(board, components))
 
     yaml.dump(data=d, stream=output)
-

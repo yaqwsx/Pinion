@@ -6,9 +6,12 @@ Pinion is a Python program. You can simply install it via pip:
 pip3 install pinion
 ```
 
-To run pinion, you will also need KiCAD 9 or newer installed on your computer.
-On Windows, you have to make sure that you run all Pinion commands inside
-**KiCAD Command Prompt**, not in the regular command prompt.
+To run pinion, you will also need KiCAD 9 or newer installed on your computer
+with `kicad-cli` available on your `PATH`. You can alternatively set the
+`KICAD_CLI` environment variable to the executable path.
+
+Pinion uses PcbDraw's `kicad-cli` annotation API to inspect components and
+pads. It does not require KiCad's `pcbnew` Python module.
 
 Once you have Pinion installed, you can verify it by running:
 

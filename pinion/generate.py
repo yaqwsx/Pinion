@@ -1,37 +1,25 @@
 from pathlib import Path
-import pcbnew
 import json
 import base64
 
 from typing import Tuple, Callable, Dict, Optional
 
 from pcbdraw.plot import (PcbPlotter, PlotComponents, PlotSubstrate,
-                          load_remapping, mm2ki)
+                          load_remapping, mm_to_internal)
 from pcbdraw import convert
 
 from pinion import __version__
-
-def ki2mm(val):
-    return val / 1000000.0
-
-def mm2ki(val):
-    return val * 1000000
 
 def padOutline(pad):
     """
     Given a pad return list of points forming a polygon for the pad shape
     """
-    layers = list(pad.GetLayerSet().CuStack())
-    layer = layers[0] if layers else pcbnew.F_Cu
-    p = pad.GetEffectivePolygon(layer)
-    outline = p.Outline(0)
-    points = [outline.CPoint(i) for i in range(outline.PointCount())]
-    return [(ki2mm(p.x), ki2mm(p.y)) for p in points]
+    return pad.outline
 
 def serializeEdaRect(rect):
     return {
-        "tl": (ki2mm(rect.GetX()), ki2mm(rect.GetY())),
-        "br": (ki2mm(rect.GetX() + rect.GetWidth()), ki2mm(rect.GetY() + rect.GetHeight()))
+        "tl": (rect.x, rect.y),
+        "br": (rect.x + rect.width, rect.y + rect.height)
     }
 
 def intervalIntersection(a, b):
@@ -89,31 +77,28 @@ def pinDefinition(spec, pad, footprint):
     """
     Given a pin specification and pad, construct description
     """
-    # There is a bug in SWIG wrapper so we can't call test on layer set
-    layers = list(pad.GetLayerSet().CuStack())
-    pos = pad.GetPosition()
     return {
         "shape": padOutline(pad),
-        "bbox": serializeEdaRect(pad.GetBoundingBox()),
-        "pos": [ki2mm(pos.x), ki2mm(pos.y)],
-        "front": pcbnew.F_Cu in layers,
-        "back": pcbnew.B_Cu in layers,
+        "bbox": serializeEdaRect(pad.bbox),
+        "pos": list(pad.position),
+        "front": "F.Cu" in pad.layers,
+        "back": "B.Cu" in pad.layers,
         "name": spec["name"],
         "description": spec.get("description", ""),
         "alias": spec.get("alias", False),
         "groups": getGroup(spec)
     }
 
-def pinsDefinition(spec, footprint):
+def pinsDefinition(spec, footprint, board):
     """
     Given a pins definition and a footprint, construct description
     """
     if spec is None:
         return []
     return [
-        pinDefinition(spec[pad.GetName()], pad, footprint)
-        for pad in footprint.Pads()
-        if pad.GetName() in spec.keys()
+        pinDefinition(spec[name], board.pads[(footprint.reference, name)], footprint)
+        for name in footprint.pads
+        if name in spec.keys()
     ]
 
 def componentsDefinition(spec, board):
@@ -122,17 +107,17 @@ def componentsDefinition(spec, board):
     """
     defs = []
     for ref, s in spec.items():
-        footprint = board.FindFootprintByReference(ref)
+        footprint = board.components[ref]
         highlightBoth = s.get("highlightBoth", False)
         defs.append({
             "ref": ref,
             "description": s["description"],
-            "front": highlightBoth or footprint.GetLayer() == pcbnew.F_Cu,
-            "back": highlightBoth or footprint.GetLayer() == pcbnew.B_Cu,
+            "front": highlightBoth or footprint.side == "front",
+            "back": highlightBoth or footprint.side == "back",
             "highlight": s.get("highlight", False),
-            "bbox": serializeEdaRect(footprint.GetBoundingBox(False, False)),
+            "bbox": serializeEdaRect(footprint.bbox),
             "groups": getGroup(s),
-            "pins": pinsDefinition(s.get("pins", None), footprint)
+            "pins": pinsDefinition(s.get("pins", None), footprint, board)
         })
     # Sort the components so overlapping components are placed on top of each
     # other
@@ -180,7 +165,7 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
         plot_components.filter = filter_fun
 
     plotter.plot_plan = [
-        PlotSubstrate(drill_holes=True, outline_width=mm2ki(0.2)),
+        PlotSubstrate(drill_holes=True, outline_width=mm_to_internal(0.2)),
         plot_components]
 
     image = plotter.plot()
@@ -189,8 +174,8 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
 
     tlx, tly, w, h = map(float, image.getroot().attrib["viewBox"].split())
     return {
-        "tl": (ki2mm(plotter.svg2ki(tlx)), ki2mm(plotter.svg2ki(tly))),
-        "br": (ki2mm(plotter.svg2ki(tlx + w)), ki2mm(plotter.svg2ki(tly + h)))
+        "tl": (tlx, tly),
+        "br": (tlx + w, tly + h)
     }
 
 def collectGroups(components):
@@ -307,39 +292,34 @@ def embedPinion(outputdir: Path, specification: any):
 </html>
 """)
 
-ImageGenerator = Callable[[pcbnew.BOARD, Path, Tuple[str, ...]], Dict[str, Dict[str, Tuple[int, int]]]]
+ImageGenerator = Callable[[object, Path, Tuple[str, ...]], Dict[str, Dict[str, Tuple[int, int]]]]
 
-def generateDrawnImages(board: pcbnew.BOARD, outputdir: Path, dpi: int, pcbdrawArgs: any,
+def generateDrawnImages(board: object, outputdir: Path, dpi: int, pcbdrawArgs: any,
                         sides: Tuple[str, ...]) -> Dict[str, Dict[str, Tuple[int, int]]]:
     result = {}
     if "front" in sides:
-        result["front"] = generateImage(board.GetFileName(), outputdir / "front.png",
+        result["front"] = generateImage(board.source_path, outputdir / "front.png",
             dpi, pcbdrawArgs, False)
     if "back" in sides:
-        result["back"] = generateImage(board.GetFileName(), outputdir / "back.png",
+        result["back"] = generateImage(board.source_path, outputdir / "back.png",
             dpi, pcbdrawArgs, True)
     return result
 
-def boardAreaRect(board: pcbnew.BOARD):
+def boardAreaRect(board: object):
     """
     Get the board bounding box in mm, suitable for the pinout spec.
     """
-    bbox = board.GetBoardEdgesBoundingBox()
-    return {
-        "tl": (ki2mm(bbox.GetX()), ki2mm(bbox.GetY())),
-        "br": (ki2mm(bbox.GetX() + bbox.GetWidth()), ki2mm(bbox.GetY() + bbox.GetHeight()))
-    }
+    return serializeEdaRect(board.bounds)
 
-def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
-                     orthographic: bool, raytraced: bool, componets: bool,
+def generateRenderedImages(board: object, outputdir: Path,
+                     orthographic: bool, raytraced: bool,
                      baseResolution: Tuple[int, int], sides: Tuple[str, ...]):
     from pcbdraw.renderer import RenderAction, renderBoard, Side
 
     result = {}
     if "front" in sides:
-        frontImage = renderBoard(board.GetFileName(), RenderAction(
+        frontImage = renderBoard(board.source_path, RenderAction(
             side=Side.FRONT,
-            components=componets,
             raytraced=raytraced,
             orthographic=orthographic,
             transparent=True,
@@ -351,9 +331,8 @@ def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
         result["front"] = boardAreaRect(board)
 
     if "back" in sides:
-        backImage = renderBoard(board.GetFileName(), RenderAction(
+        backImage = renderBoard(board.source_path, RenderAction(
             side=Side.BACK,
-            components=componets,
             raytraced=raytraced,
             orthographic=orthographic,
             transparent=True,
@@ -370,7 +349,7 @@ def generateRenderedImages(board: pcbnew.BOARD, outputdir: Path,
     return result
 
 
-def generate(board: pcbnew.BOARD, specification: any, outputdir, pack: bool,
+def generate(board: object, specification: any, outputdir, pack: bool,
              embed: bool, sides: Tuple[str, ...],
              imageGenerator: ImageGenerator):
     """

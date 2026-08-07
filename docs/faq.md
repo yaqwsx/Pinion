@@ -1,10 +1,10 @@
 # Frequently asked questions
 
-## Pinion says `pcbnew: no module found`
+## Pinion says `kicad-cli not found`
 
-This message probably means that you don't have KiCAD 9 or newer installed. On
-Windows, make sure you run all Pinion commands inside **KiCAD Command Prompt**,
-not in the regular command prompt. See [installation](installation.md).
+This message means that Pinion cannot locate KiCAD 9 or newer's command-line
+tool. Add `kicad-cli` to your `PATH`, or set `KICAD_CLI` to its executable path.
+See [installation](installation.md).
 
 ## The diagram does not show up!
 

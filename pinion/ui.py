@@ -128,13 +128,11 @@ def template(board, output, components):
     """
     Output a template for pinout specification based on specified board
     """
-    # Note that we import inside functions as pcbnew import takes ~1 to load
-    # which makes the UI laggy
     from pinion.template import generateTemplate
-    import pcbnew
+    from pcbdraw import load_board_scene
 
     outputPath = resolveTemplateOutput(output)
-    pcb = pcbnew.LoadBoard(board)
+    pcb = load_board_scene(board)
     with click.open_file(outputPath, "w") as outputFile:
         generateTemplate(pcb, outputFile, components)
 
@@ -175,15 +173,13 @@ def generatePlotted(board, specification, outputdir, dpi, pack, embed, side, sty
     """
     Generate a pinout diagram with stylized image of the board
     """
-    # Note that we import inside functions as pcbnew import takes ~1 to load
-    # which makes the UI laggy
     from pinion.generate import generate, generateDrawnImages
     from ruamel.yaml import YAML
-    import pcbnew
+    from pcbdraw import load_board_scene
 
     yaml=YAML(typ='safe')
 
-    def generateImages(board: pcbnew.BOARD, outputdir: Path, sides) -> Dict[str, Dict[str, Tuple[int, int]]]:
+    def generateImages(board, outputdir: Path, sides) -> Dict[str, Dict[str, Tuple[int, int]]]:
         return generateDrawnImages(board, outputdir, dpi, {
                  "style": style,
                  "libs": libs,
@@ -193,7 +189,7 @@ def generatePlotted(board, specification, outputdir, dpi, pack, embed, side, sty
 
     with click.open_file(specification, "r") as specificationFile:
         generate(specification=yaml.load(specificationFile),
-                 board=pcbnew.LoadBoard(board),
+                 board=load_board_scene(board),
                  outputdir=outputdir,
                  pack=pack,
                  embed=embed,
@@ -207,23 +203,20 @@ def generatePlotted(board, specification, outputdir, dpi, pack, embed, side, sty
 @click.option("--projection", type=click.Choice(["orthographic", "perspective"]), default="orthographic",
     help="Specify projection")
 @click.option("--no-components", is_flag=True, default=False,
-    help="Disable component rendering")
+    help="Deprecated; kicad-cli's renderer always controls component visibility")
 def generateRendered(board, specification, pack, outputdir, renderer,
                      embed, side, projection, no_components):
     """
     Generate a pinout diagram with 3D rendered image of the board
     """
-    # Note that we import inside functions as pcbnew import takes ~1 to load
-    # which makes the UI laggy
     from pinion.generate import generate, generateRenderedImages
     from ruamel.yaml import YAML
-    import pcbnew
+    from pcbdraw import load_board_scene
 
     yaml=YAML(typ='safe')
 
-    def generateImages(board: pcbnew.BOARD, outputdir: Path, sides) -> Dict[str, Dict[str, Tuple[int, int]]]:
+    def generateImages(board, outputdir: Path, sides) -> Dict[str, Dict[str, Tuple[int, int]]]:
         return generateRenderedImages(board, outputdir,
-            componets=(not no_components),
             orthographic=(projection == "orthographic"),
             raytraced=(renderer == "raytrace"),
             baseResolution=(3000, 3000),
@@ -231,7 +224,7 @@ def generateRendered(board, specification, pack, outputdir, renderer,
 
     with click.open_file(specification, "r") as specificationFile:
         generate(specification=yaml.load(specificationFile),
-                 board=pcbnew.LoadBoard(board),
+                 board=load_board_scene(board),
                  outputdir=outputdir,
                  pack=pack,
                  embed=embed,
