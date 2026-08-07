@@ -29,9 +29,10 @@ jobs:
             npm
 
           python3 -m pip install --break-system-packages mkdocs
+          # Pinion requires PcbDraw's annotation API, introduced in v1.4.0.
+          # Install it first so editable Pinion dependency resolution can use it.
+          python3 -m pip install --break-system-packages git+https://github.com/yaqwsx/PcbDraw@v1.4.0
           python3 -m pip install --break-system-packages -e .
-          # Temporarily install upstream version of PcbDraw
-          python3 -m pip install --break-system-packages --force git+https://github.com/yaqwsx/PcbDraw@master
           cd pinion-widget
 
           npm ci
