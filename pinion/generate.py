@@ -139,8 +139,7 @@ def generateImage(boardfilename, outputfilename, dpi, pcbdrawArgs, back):
     plotter.yield_warning = print
 
 
-    if pcbdrawArgs["libs"] is not None:
-        plotter.libs = pcbdrawArgs["libs"]
+    plotter.libs = pcbdrawArgs["libs"] if pcbdrawArgs["libs"] is not None else ["KiCAD-base"]
     plotter.render_back = back
     plotter.svg_precision = 5
     if pcbdrawArgs["style"] is not None:

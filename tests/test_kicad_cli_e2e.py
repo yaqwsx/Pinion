@@ -67,6 +67,7 @@ def test_template_and_plotted_generation_use_kicad_cli_only(tmp_path):
     assert "front" in specification
     assert (output / "front.png").is_file()
     assert any(component["pins"] for component in specification["components"])
+    assert "yaqwsx:arduino_nano has no footprint" not in result.stdout
 
 
 def test_rendered_generation_uses_the_kicad_cli_renderer(tmp_path):
