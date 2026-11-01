@@ -1,0 +1,674 @@
+name: Arduino Learning Kit Starter
+description: |
+    Breakout board for ESP32 or Arduino Nano that gives you some basic
+    peripherals to work with.
+
+    See [Github](https://github.com/RoboticsBrno/ArduinoLearningKitStarter) for
+    more details.
+components:
+    U2:
+        description: arduino_uno  # Arbitrary comment
+        groups: []
+        pins:
+            '1':  # Connected to
+                name: Not connected
+                description: Unused pin
+                groups:
+                    - Uno Pinout
+            '2': # Connected to IOREF
+                name: IOREF
+                description: |
+                    Reference voltage of the MCU (5V for Arduino, 3V3 for ESP32)
+                groups:
+                    - Uno Pinout
+            '3': # Connected to RST
+                name: Reset
+                description: |
+                    Arduino reset pin. Leave floating if unused, pull low to
+                    put the microcontroller into reset.
+                groups:
+                    - Uno Pinout
+            '4': # Connected to +3V3
+                name: +3V3
+                description: |
+                    Power source, powered by the internal regulator on the
+                    Arduino or ESP32
+                groups:
+                    - Uno Pinout
+                    - Power
+            '5': # Connected to +5V
+                name: +5V
+                description: |
+                    Power source, powered by the internal regulator on the
+                    Arduino or ESP32
+                groups:
+                    - Uno Pinout
+                    - Power
+            '6': # Connected to GND
+                name: GND
+                description: |
+                    Common ground of all power and logic pins
+                groups:
+                    - Uno Pinout
+                    - Power
+            '7': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Uno Pinout
+                    - Power
+            '8': # Connected to VCC
+                name: VIN
+                description: |
+                    Arduino VIN pin. This pin is **power input**. It is
+                    connected to the internal voltage regulator of either
+                    Arduino or ESP32. You can supply 6-18 V.
+                groups:
+                    - Uno Pinout
+                    - Power
+            '9': # Connected to A0
+                name: A0
+                description: |
+                    A0 pin of Arduino
+                groups:
+                    - Uno Pinout
+                    - Analog
+            '10': # Connected to A1
+                name: A1
+                description: |
+                    A1 pin of Arduino
+                groups:
+                    - Uno Pinout
+                    - Analog
+            '11': # Connected to A2
+                name: A2
+                description: |
+                    A3 pin of Arduino
+                groups:
+                    - Uno Pinout
+                    - Analog
+            '12': # Connected to A3
+                name: A3
+                description: |
+                    A3 pin of Arduino
+                groups:
+                    - Uno Pinout
+                    - Analog
+            '13': # Connected to A4
+                name: A4/SDA
+                description: |
+                    A4 pin of Arduino. Also serves as SDA of I2C
+                groups:
+                    - Uno Pinout
+                    - Analog
+                    - I2C
+            '14': # Connected to A5
+                name: A5/SCL
+                description: |
+                    A5 pin of Arduino. Also serves as SCL of I2C
+                groups:
+                    - Uno Pinout
+                    - Analog
+                    - I2C
+            '15': # Connected to D0
+                name: D0/RX
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - Serial
+            '16': # Connected to D1
+                name: D1/TX
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - Serial
+            '17': # Connected to D2
+                name: D2/Interrupt
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - Interrupt
+            '18': # Connected to D3
+                name: D3/Interrupt/PWM
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - Interrupt
+                    - PWM
+            '19': # Connected to D4
+                name: D4
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+            '20': # Connected to D5
+                name: D5
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - PWM
+            '21': # Connected to D6
+                name: D6
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - PWM
+            '22': # Connected to D7
+                name: D7
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+            '23': # Connected to D8
+                name: D8
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+            '24': # Connected to D9
+                name: D9
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - PWM
+            '25': # Connected to D10
+                name: D10/SS
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - SPI
+                    - PWM
+            '26': # Connected to D11
+                name: D11/MOSI
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - SPI
+                    - PWM
+            '27': # Connected to D12
+                name: D12/MISO
+                description: ''
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - SPI
+            '28': # Connected to D13
+                name: D13/SCK
+                description: |
+                    This pin serves as SCK line of the SPI peripheral. Also the
+                    Arduino on-board LED is connected to this pin.
+                groups:
+                    - Uno Pinout
+                    - Digital
+                    - SPI
+            '29': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Uno Pinout
+                    - Power
+            '30': # Connected to AREF
+                name: AREF
+                description: |
+                    Analog reference voltage.
+                groups:
+                    - Uno Pinout
+                    - Power
+            '31': # Connected to A4
+                name: A4/SDA
+                alias: A4/SDA
+                groups:
+                    - Uno Pinout
+                    - I2C
+                    - Analog
+            '32': # Connected to A5
+                name: A5/SCL
+                alias: A5/SCL
+                groups:
+                    - Uno Pinout
+                    - I2C
+                    - Analog
+        highlight: false
+    S3:
+        description: |
+            # Servo 3
+        highlight: true
+        groups:
+            - Servo
+        pins:
+            '1':  # Connected to GND
+                name: Servo3.GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to VCC_SERVO
+                name: Servo3.VCC
+                description: 5V separate power source for servos
+                groups:
+                    - Power
+            '3': # Connected to Net-(R20-Pad2)
+                name: Servo3.signal
+                description: ''
+                groups:
+                    - Servo
+    JP16:
+        description: |
+            # Piezo enable jumper
+
+            This jumper enables piezo. It can be useful when you get annoyed by
+            the buzzing.
+        highlight: true
+        groups:
+            - Jumpers
+        pins:
+    S1:
+        description: |
+            # Servo 1
+        highlight: true
+        groups:
+            - Servo
+        pins:
+            '1':  # Connected to GND
+                name: Servo1.GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to VCC_SERVO
+                name: Servo1.VCC
+                description: 5V separate power source for servos
+                groups:
+                    - Power
+            '3': # Connected to Net-(R20-Pad2)
+                name: Servo1.signal
+                description: ''
+                groups:
+                    - Servo
+    S2:
+        description: |
+            # Servo 2
+        highlight: true
+        groups:
+            - Servo
+        pins:
+            '1':  # Connected to GND
+                name: Servo2.GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to VCC_SERVO
+                name: Servo2.VCC
+                description: 5V separate power source for servos
+                groups:
+                    - Power
+            '3': # Connected to Net-(R20-Pad2)
+                name: Servo2.signal
+                description: ''
+                groups:
+                    - Servo
+    S4:
+        description: |
+            # Servo 4
+        highlight: true
+        groups:
+            - Servo
+        pins:
+            '1':  # Connected to GND
+                name: Servo4.GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to VCC_SERVO
+                name: Servo4.VCC
+                description: 5V separate power source for servos
+                groups:
+                    - Power
+            '3': # Connected to Net-(R20-Pad2)
+                name: Servo4.signal
+                description: ''
+                groups:
+                    - Servo
+    S5:
+        description: |
+            # Servo 5
+        highlight: true
+        groups:
+            - Servo
+        pins:
+            '1':  # Connected to GND
+                name: Servo5.GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to VCC_SERVO
+                name: Servo5.VCC
+                description: 5V separate power source for servos
+                groups:
+                    - Power
+            '3': # Connected to Net-(R20-Pad2)
+                name: Servo5.signal
+                description: ''
+                groups:
+                    - Servo
+    DHT11:
+        description: |
+            # DHT11 connection point
+
+            You can connect temperature and humidity sensor DHT11 here. The
+            pinout matches 1:1
+        groups:
+            - Sensor
+        pins:
+            '1':  # Connected to IOREF_U
+                name: IOREF
+                alias: IOREF
+                groups:
+                    - Power
+            '2': # Connected to A3
+                name: DHT11.DATA
+                description: |
+                    Data pin of DTH11
+                groups: []
+            '3': # Connected to
+                name: NC
+                description: Not connected
+                groups: []
+            '4': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+        highlight: true
+    J2:
+        description: CONN_01X08  # Arbitrary comment
+        groups: []
+        pins:
+            '1':  # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to IOREF
+                name: GND
+                alias: IOREF
+                groups:
+                    - Power
+            '3': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '4': # Connected to +3V3
+                name: 3V3
+                alias: 3V3
+                groups:
+                    - Power
+            '5': # Connected to +5V
+                name: 5V
+                alias: 5V
+                groups:
+                    - Power
+            '6': # Connected to +5V
+                name: 5V
+                alias: 5V
+                groups:
+                    - Power
+            '7': # Connected to +5V
+                name: 5V
+                alias: 5V
+                groups:
+                    - Power
+            '8': # Connected to +5V
+                name: 5V
+                alias: 5V
+                groups:
+                    - Power
+        highlight: false
+    J3:
+        description: CONN_01X06  # Arbitrary comment
+        groups: []
+        pins:
+            '1':  # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '3': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '4': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '5': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '6': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+        highlight: false
+    J4:
+        description: CONN_01X08  # Arbitrary comment
+        groups: []
+        pins:
+            '1':  # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '3': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '4': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '5': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '6': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '7': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '8': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+        highlight: false
+    J5:
+        description: CONN_01X10  # Arbitrary comment
+        groups: []
+        pins:
+            '1':  # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '2': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '3': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '4': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '5': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '6': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '7': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '8': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '9': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '10': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+        highlight: false
+    J7:
+        description: |
+            # Analog sensor connection point
+
+            You can connect analog sensors here (e.g., a photoresistor). The
+            sensor value can be read on pin A3. There is built-in 20k pull-down.
+        highlight: true
+        groups:
+            - Sensor
+        pins:
+            '1':  # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+                    - Analog sensor
+            '2': # Connected to Net-(J7-Pad2)
+                name: Sensor low point
+                description: |
+                    Connect one pin of the sensor here
+                groups:
+                    - Analog sensor
+            '3': # Connected to A3
+                name: Sensor hight point
+                description: |
+                    Connect one pin of the sensor here
+                groups:
+                    - Analog sensor
+            '4': # Connected to IOREF_U
+                name: J7.4
+                description: ''
+                groups:
+                    - Power
+                    - Analog sensor
+    JP17:
+        description: |
+            Enable/disable debouncing capacitor on SW1. Implemented for
+            educational purposes so you can try software debouncing (and finding
+            out how annoying it is).
+        groups:
+            - Jumpers
+        highlight: true
+    JP18:
+        description: |
+            # IORef selection
+
+            Select whether the IO ref voltage should be 5V (Arduino) or 3V3
+            (ESP32).
+        highlight: true
+        groups:
+            - Jumpers
+        pins:
+            '1':  # Connected to +5V
+                name: IORef 5V
+                description: Connect middle pin with this one to choose 5V
+                groups: []
+            '3': # Connected to +3V3
+                name: IORef 3V3
+                description: Connect middle pin with this one to choose 3V3
+                groups: []
+    J6:
+        description: |
+            # Serial port
+        groups:
+            - Serial
+        pins:
+            '1':  # Connected to Net-(J6-Pad1)
+                name: D1/TX
+                alias: D1/TX
+                groups:
+                    - Serial
+                    - Digital
+            '2': # Connected to Net-(J6-Pad2)
+                name: D0/RX
+                alias: D0/RX
+                groups:
+                    - Serial
+                    - Digital
+            '3': # Connected to GND
+                name: GND
+                alias: GND
+                groups:
+                    - Power
+            '4': # Connected to IOREF_U
+                name: IOREF
+                alias: IOREF
+                groups:
+                    - Power
+        highlight: false
+groups:
+    Peripherals:
+        - I2C
+        - Serial
+        - SPI
+    Pins:
+        - Power
+        - PWM
+        - Interrupt
+        - Analog
+        - Digital
+    Jumpers:
+    Uno Pinout:
+    Features:
+        - Servo
+        - Analog sensor
